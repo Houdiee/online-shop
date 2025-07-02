@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Data;
 
-public class ApiDbContext(DbContextOptions<ApiDbContext> options) : DbContext
+public class ApiDbContext(DbContextOptions<ApiDbContext> options) : DbContext(options)
 {
     public DbSet<ProductModel> Products { get; set; } = null!;
     public DbSet<ProductVariantModel> ProductVariants { get; set; } = null!;

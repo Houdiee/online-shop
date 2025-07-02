@@ -58,7 +58,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
         return Ok(product);
     }
 
-    [HttpPost("upload/{variantId}")]
+    [HttpPost("images/{variantId}")]
     public async Task<IActionResult> UploadVariantImages(int variantId, IFormFileCollection files)
     {
         ProductVariantModel? variant = await _context.ProductVariants.FindAsync(variantId);
@@ -75,9 +75,9 @@ public class ProductsController(ApiDbContext context) : ControllerBase
 
         List<string> uploadedPhotoUrls = [];
 
+        string[] allowedExtensions = [".jpg", ".jpeg", ".png"];
         foreach (IFormFile file in files)
         {
-            string[] allowedExtensions = [".jpg", ".jpeg", ".png"];
             string fileExtension = Path.GetExtension(file.FileName);
 
             if (!allowedExtensions.Contains(fileExtension))
