@@ -19,6 +19,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
         {
             Name = req.Name,
             Description = req.Description,
+            Tags = req.Tags,
             Variants = req.Variants.Select(static v => new ProductVariantModel
             {
                 Name = v.Name,

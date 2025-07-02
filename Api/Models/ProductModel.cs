@@ -10,6 +10,8 @@ public class ProductModel
 
     public string? Description { get; set; }
 
+    public required ICollection<string> Tags { get; set; }
+
     public required ICollection<ProductVariantModel> Variants { get; set; }
 }
 

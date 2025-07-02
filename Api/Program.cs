@@ -1,10 +1,13 @@
 using Api.Data;
+using Api.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+builder.Services.AddFluentValidationServices();
 
 builder.Services.AddDbContextPool<ApiDbContext>(options =>
 {
