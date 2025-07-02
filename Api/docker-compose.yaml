@@ -1,0 +1,10 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: omnishop_psql_db
+    environment:
+      POSTGRES_DB: omnishop_db
+      POSTGRES_USER: kerim
+      POSTGRES_PASSWORD: securepassword
+    ports:
+      - "5432:5432"
