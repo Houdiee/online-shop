@@ -18,7 +18,7 @@ public class OrderModel
     public required int UserId { get; set; }
 
     [JsonIgnore]
-    public required UserModel User { get; set; }
+    public UserModel User { get; set; } = null!;
 }
 
 public enum OrderStatus

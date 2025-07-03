@@ -11,7 +11,7 @@ public class ShoppingCartModel
     [JsonIgnore]
     public required int UserId { get; set; }
     [JsonIgnore]
-    public required UserModel User { get; set; }
+    public UserModel User { get; set; } = null!;
 }
 
 public class ShoppingCartItemModel
@@ -25,10 +25,10 @@ public class ShoppingCartItemModel
     [JsonIgnore]
     public required int ShoppingCartId { get; set; }
     [JsonIgnore]
-    public required ShoppingCartModel ShoppingCart { get; set; }
+    public ShoppingCartModel ShoppingCart { get; set; } = null!;
 
     [JsonIgnore]
     public required int ProductVariantId { get; set; }
     [JsonIgnore]
-    public required ProductVariantModel ProductVariant { get; set; }
+    public ProductVariantModel ProductVariant { get; set; } = null!;
 }

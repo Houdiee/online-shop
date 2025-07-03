@@ -23,7 +23,6 @@ public class CreateProductRequestValidator : AbstractValidator<CreateProductRequ
           .MaximumLength(256).WithMessage("Product name is too long. Maximum of 256 characters allowed");
 
         _ = RuleFor(static product => product.Description)
-          .NotEmpty().WithMessage("Product description cannot be empty")
           .MaximumLength(1000).WithMessage("Product description is too long. Maximum of 1000 characters allowed");
 
         _ = RuleFor(static product => product.Tags)

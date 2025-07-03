@@ -36,5 +36,5 @@ public class ProductVariantModel
     [JsonIgnore]
     public int ProductId { get; set; }
     [JsonIgnore]
-    public required ProductModel Product { get; set; }
+    public ProductModel Product { get; set; } = null!;
 }
