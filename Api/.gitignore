@@ -2,3 +2,4 @@ obj/
 bin/
 Migrations/
 appsettings.json/
+docker-compose.yaml
