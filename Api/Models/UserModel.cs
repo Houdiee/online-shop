@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Api.Models;
 
 public class UserModel
@@ -17,6 +19,9 @@ public class UserModel
     public required string PasswordHash { get; set; }
 
     public required DateTime CreatedAt { get; set; }
+
+    [JsonIgnore]
+    public required ICollection<OrderModel> Orders { get; set; }
 }
 
 public enum UserRole

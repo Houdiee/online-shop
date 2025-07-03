@@ -23,13 +23,18 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options) : DbContext(op
         // User
         _ = modelBuilder.Entity<UserModel>(static user =>
         {
-            _ = user.HasKey(static user => user.Id);
+            _ = user.HasKey(static u => u.Id);
 
             _ = user
-                .HasOne(static user => user.ShoppingCart)
+                .HasOne(static u => u.ShoppingCart)
                 .WithOne(static cart => cart.User)
                 .HasForeignKey<ShoppingCartModel>(static cart => cart.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            _ = user
+                  .HasMany(static u => u.Orders)
+                  .WithOne(static ord => ord.User)
+                  .HasForeignKey(static ord => ord.UserId);
         });
 
 
@@ -52,12 +57,29 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options) : DbContext(op
             _ = products.HasKey(static prod => prod.Id);
 
             _ = products
+                .Property(static prod => prod.Tags)
+                .HasConversion(
+                    static tags => string.Join(',', tags),
+                    static tags => tags.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                );
+
+            _ = products
                 .HasMany(static prod => prod.Variants)
                 .WithOne(static prodvar => prodvar.Product)
                 .HasForeignKey(static prodvar => prodvar.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        _ = modelBuilder.Entity<ProductVariantModel>().HasKey(static productVar => productVar.Id);
+        _ = modelBuilder.Entity<ProductVariantModel>(static productVariant =>
+        {
+            _ = productVariant.HasKey(static productVar => productVar.Id);
+
+            _ = productVariant
+                  .Property(static prodVar => prodVar.PhotoUrls)
+                  .HasConversion(
+                    static tags => string.Join(',', tags),
+                    static tags => tags.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                  );
+        });
 
 
         // Orders and OrderItems
