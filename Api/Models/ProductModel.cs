@@ -13,6 +13,8 @@ public class ProductModel
     public required ICollection<string> Tags { get; set; }
 
     public required ICollection<ProductVariantModel> Variants { get; set; }
+
+    public required DateTime CreatedAt { get; set; }
 }
 
 public class ProductVariantModel
@@ -29,10 +31,10 @@ public class ProductVariantModel
 
     public required ICollection<string> PhotoUrls { get; set; }
 
-    // Navigation
-    [JsonIgnore]
-    public int ProductId { get; set; }
+    public required DateTime CreatedAt { get; set; }
 
     [JsonIgnore]
-    public ProductModel? Product { get; set; }
+    public int ProductId { get; set; }
+    [JsonIgnore]
+    public required ProductModel Product { get; set; }
 }

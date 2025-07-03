@@ -27,6 +27,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
                 StockQuantity = v.StockQuantity,
                 PhotoUrls = new List<string>(),
             }).ToList(),
+            CreatedAt = DateTime.UtcNow,
         };
 
         _ = await _context.Products.AddAsync(newProduct);
@@ -57,6 +58,41 @@ public class ProductsController(ApiDbContext context) : ControllerBase
         }
 
         return Ok(product);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetProductsByQuery(
+        [FromQuery] string? search = null,
+        [FromQuery] string? tags = null,
+        [FromQuery] string? sortBy = null)
+    {
+        IQueryable<ProductModel> query = _context.Products.Include(static p => p.Variants);
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(p => p.Name.Contains(search));
+        }
+
+        if (!string.IsNullOrEmpty(tags))
+        {
+            query = query.Where(p => p.Tags.Contains(tags));
+        }
+
+        if (!string.IsNullOrEmpty(sortBy))
+        {
+            query = sortBy switch
+            {
+                "priceAsc" => query.OrderBy(p => p.Variants.FirstOrDefault()!.Price),
+                "priceDesc" => query.OrderByDescending(p => p.Variants.FirstOrDefault()!.Price),
+                "alphabeticalAsc" => query.OrderBy(p => p.Name),
+                "alphabeticalDesc" => query.OrderByDescending(p => p.Name),
+                _ => query.OrderByDescending(p => p.CreatedAt),
+            };
+        }
+
+        List<ProductModel> products = await query.ToListAsync();
+
+        return Ok(products);
     }
 
     [HttpPost("images/{variantId}")]
