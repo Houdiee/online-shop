@@ -20,7 +20,7 @@ public class OrderItemModel
     public OrderModel Order { get; set; } = null!;
 
     [JsonIgnore]
-    public required int ProductVariantId { get; set; }
+    public int ProductVariantId { get; set; }
     [JsonIgnore]
     public ProductVariantModel ProductVariant { get; set; } = null!;
 }

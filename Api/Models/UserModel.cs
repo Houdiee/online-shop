@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Api.Models;
 
 public class UserModel
@@ -10,7 +12,7 @@ public class UserModel
 
   public required string LastName { get; set; }
 
-  public required ShoppingCartModel ShoppingCart { get; set; }
+  public ShoppingCartModel ShoppingCart { get; set; } = null!;
 
   public required UserRole Role { get; set; }
 
@@ -21,6 +23,7 @@ public class UserModel
   public required ICollection<OrderModel> Orders { get; set; }
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter<UserRole>))]
 public enum UserRole
 {
   Customer,

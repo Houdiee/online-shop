@@ -15,6 +15,8 @@ public static class ResendServices
       options.ApiToken = configuration["ApiKeys.Resend"]!;
     });
 
+    services.AddTransient<IResend, ResendClient>();
+
     return services;
   }
 }

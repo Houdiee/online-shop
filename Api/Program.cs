@@ -1,14 +1,11 @@
 using Api.Data;
 using Api.Extensions;
-using Api.Services.User;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-
-builder.Services.AddTransient<UserService>();
 
 builder.Services
   .AddFluentValidationServices()

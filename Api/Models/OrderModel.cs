@@ -15,7 +15,7 @@ public class OrderModel
     public required DateTime OrderedAt { get; set; }
 
     [JsonIgnore]
-    public required int UserId { get; set; }
+    public int UserId { get; set; }
 
     [JsonIgnore]
     public UserModel User { get; set; } = null!;
