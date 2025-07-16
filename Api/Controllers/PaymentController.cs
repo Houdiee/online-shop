@@ -96,7 +96,7 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
 
             stripeEvent = EventUtility.ConstructEvent(json, signatureHeader, endpointSecret);
 
-            if (!stripeEvent.Type == EventTypes.CheckoutSessionCompleted)
+            if (stripeEvent.Type != EventTypes.CheckoutSessionCompleted)
             {
                 return BadRequest(new { message = "Invalid stripe event type. Only accepting CheckoutSessionCompleted" });
             }
