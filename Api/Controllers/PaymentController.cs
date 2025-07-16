@@ -163,24 +163,21 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
 
             _context.Orders.Add(newOrder);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Error: {e}");
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { message = "An unexpected problem occurred" }
-                );
-            }
+            await _context.SaveChangesAsync();
+            return Ok();
         }
         catch (StripeException e)
         {
             Console.WriteLine($"Error: {e}");
             return BadRequest();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e}");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new { message = "An unexpected problem occurred" }
+            );
         }
     }
 }
