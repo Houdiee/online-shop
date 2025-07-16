@@ -2,14 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Api.Models;
 using Api.Data;
 using Api.Dtos.ShoppingCart;
-using Api.Filters;
 using Microsoft.AspNetCore.Mvc;
+using Api.Filters;
 
 namespace Api.Controllers;
 
 [ApiController]
 [Route("users/{userId}/[controller]")]
-[TypeFilter(typeof(ValidateUserExistsAttribute))]
+[TypeFilter(typeof(VerifyUserExistsAttribute))]
 public class ShoppingCartController(ApiDbContext context) : ControllerBase
 {
     private readonly ApiDbContext _context = context;

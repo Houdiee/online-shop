@@ -19,12 +19,15 @@ public class OrderModel
 
     [JsonIgnore]
     public UserModel User { get; set; } = null!;
+
+    public string? StripePaymentIntentId { get; set; }
+
+    public string? StripeCheckoutSessionId { get; set; }
 }
 
 public enum OrderStatus
 {
     Pending,
-    Shipped,
     Completed,
     Cancelled,
     Refunded,
