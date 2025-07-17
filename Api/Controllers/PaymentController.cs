@@ -1,5 +1,4 @@
 using Api.Data;
-using Api.Dtos.Order;
 using Api.Filters;
 using Api.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -16,24 +15,38 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
     private readonly ApiDbContext _context = context;
     private readonly IConfiguration _configuration = configuration;
 
-    [HttpPost("checkout")]
+    [HttpPost("checkout/{shoppingCartId}")]
     [ServiceFilter(typeof(VerifyUserExistsAttribute))]
-    public async Task<IActionResult> CreateCheckoutSession([FromBody] CreateCheckoutSessionRequest request)
+    public async Task<IActionResult> CreateCheckoutSession(int shoppingCartId)
     {
         UserModel? user = (UserModel)HttpContext.Items["user"]!;
 
-        List<ProductVariantModel>? variants = await _context.ProductVariants
-            .Include(v => v.Product)
-            .Where(v => request.VariantIds.Contains(v.Id))
-            .ToListAsync();
+        ShoppingCartModel? shoppingCart = await _context.ShoppingCarts
+            .Include(sc => sc.Items)
+            .ThenInclude(i => i.ProductVariant)
+            .ThenInclude(v => v.Product)
+            .FirstOrDefaultAsync(sc => sc.Id == shoppingCartId && sc.UserId == user.Id);
+
+        if (shoppingCart is null || shoppingCart.Items.Count == 0)
+        {
+            return BadRequest(new { message = "Shopping cart is empty or does not belong to the user." });
+        }
 
         List<SessionLineItemOptions> lineItems = [];
-
         string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
 
-        foreach (var variant in variants)
+        foreach (var item in shoppingCart.Items)
         {
-            List<string> absoluteImageUrls = variant.PhotoUrls.Select(url => $"{baseUrl}{url}").ToList();
+            if (item.ProductVariant == null || item.ProductVariant.Product == null)
+            {
+                return StatusCode(500, "Error: Product details missing for an item in the cart.");
+            }
+
+            List<string> absoluteImageUrls = item.ProductVariant.PhotoUrls.Select(url => $"{baseUrl}{url}").ToList();
+            if (absoluteImageUrls.Count == 0)
+            {
+                absoluteImageUrls.Add($"{baseUrl}/images/placeholder.png");
+            }
 
             lineItems.Add(new SessionLineItemOptions
             {
@@ -41,13 +54,13 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
                 {
                     ProductData = new SessionLineItemPriceDataProductDataOptions
                     {
-                        Name = $"{variant.Product.Name} - {variant.Name}",
+                        Name = $"{item.ProductVariant.Product.Name} - {item.ProductVariant.Name}",
                         Images = absoluteImageUrls,
                     },
-                    UnitAmount = (long)Math.Round(variant.Price * 100),
+                    UnitAmount = (long)Math.Round(item.ProductVariant.Price * 100),
                     Currency = "aud",
                 },
-                Quantity = 1,
+                Quantity = item.Quantity,
             });
         }
 
@@ -61,7 +74,7 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
             Metadata = new Dictionary<string, string>
             {
                 { "userId", user.Id.ToString() },
-                { "variantIds", string.Join(",", variants.Select(v => v.Id)) }
+                { "shoppingCartId", shoppingCart.Id.ToString() }
             },
             ClientReferenceId = user.Id.ToString(),
         };
@@ -72,13 +85,20 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
             Session? session = await service.CreateAsync(options);
             return Redirect(session.Url);
         }
-        catch (Exception e)
+        catch (StripeException e)
         {
-            Console.WriteLine($"Error: {e}");
-
+            Console.WriteLine($"Stripe API Error creating checkout session: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
-                new { message = "An unexpected problem occured" }
+                new { message = "Error communicating with Stripe: " + e.Message }
+            );
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"General Error creating checkout session: {e}");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new { message = "An unexpected problem occurred while creating the checkout session." }
             );
         }
     }
@@ -86,56 +106,90 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
     [HttpPost("webhook")]
     public async Task<IActionResult> Index()
     {
+        Console.WriteLine($"Webhook triggered at {DateTime.UtcNow}");
         string? json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
         string endpointSecret = _configuration["ApiKeys:Stripe:WebhookSecret"]!;
-        Console.WriteLine("booyah");
+
+        Event? stripeEvent;
         try
         {
-            var stripeEvent = EventUtility.ParseEvent(json);
             var signatureHeader = Request.Headers["Stripe-Signature"];
-
             stripeEvent = EventUtility.ConstructEvent(json, signatureHeader, endpointSecret);
+            Console.WriteLine($"Stripe Event Type: {stripeEvent.Type}");
+        }
+        catch (StripeException e)
+        {
+            Console.WriteLine($"Stripe webhook signature validation failed: {e.Message}");
+            return BadRequest();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error parsing webhook event: {e.Message}");
+            Console.WriteLine(e.StackTrace);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Error processing webhook event.");
+        }
 
-            if (stripeEvent.Type != EventTypes.CheckoutSessionCompleted)
+
+        if (stripeEvent.Type != EventTypes.CheckoutSessionCompleted)
+        {
+            return Ok();
+        }
+        Console.WriteLine("Event type is checkout.session.completed. Proceeding with order creation.");
+
+        Session? session = stripeEvent.Data.Object as Session;
+        if (session == null)
+        {
+            Console.WriteLine("Webhook: Session object is null.");
+            return BadRequest(new { message = "Session data missing from event." });
+        }
+
+        if (session.PaymentStatus != "paid")
+        {
+            Console.WriteLine($"Webhook: Session payment status is '{session.PaymentStatus}', not 'paid'. Skipping order creation.");
+            return Ok();
+        }
+        Console.WriteLine($"Webhook: Payment status for session {session.Id} is paid.");
+
+        if (!session.Metadata.TryGetValue("userId", out string? userIdString) ||
+            !session.Metadata.TryGetValue("shoppingCartId", out string? shoppingCartIdString))
+        {
+            Console.WriteLine("Webhook: Missing userId or shoppingCartId in session metadata.");
+            return BadRequest("Missing required metadata in Stripe session.");
+        }
+
+        if (!int.TryParse(userIdString, out int userId))
+        {
+            Console.WriteLine($"Webhook: Invalid userId format in metadata: '{userIdString}'");
+            return BadRequest("Invalid userId format.");
+        }
+        if (!int.TryParse(shoppingCartIdString, out int shoppingCartId))
+        {
+            Console.WriteLine($"Webhook: Invalid shoppingCartId format in metadata: '{shoppingCartIdString}'");
+            return BadRequest("Invalid shoppingCartId format.");
+        }
+        Console.WriteLine($"Webhook: Processing order for User ID: {userId}, Shopping Cart ID: {shoppingCartId}");
+
+        try
+        {
+            ShoppingCartModel? shoppingCart = await _context.ShoppingCarts
+                .Include(sc => sc.Items)
+                .ThenInclude(i => i.ProductVariant)
+                .ThenInclude(v => v.Product)
+                .FirstOrDefaultAsync(sc => sc.Id == shoppingCartId && sc.UserId == userId);
+
+            if (shoppingCart is null || shoppingCart.Items.Count == 0)
             {
-                return BadRequest(new { message = "Invalid stripe event type. Only accepting CheckoutSessionCompleted" });
+                Console.WriteLine($"Webhook Warning: Shopping cart {shoppingCartId} not found or empty for user {userId}. Order might have been processed already or cart cleared prematurely.");
+                return Ok();
             }
+            Console.WriteLine($"Webhook: Found shopping cart {shoppingCart.Id} with {shoppingCart.Items.Count} items.");
 
-            Session? session = stripeEvent.Data.Object as Session;
-            if (session == null)
+
+            bool orderExists = await _context.Orders.AnyAsync(o => o.StripeCheckoutSessionId == session.Id);
+            if (orderExists)
             {
-                return BadRequest(new { message = "Session does not exist" });
-            }
-
-            if (session.PaymentStatus != "paid")
-            {
-                return BadRequest(new { message = "Payment status must be paid" });
-            }
-
-            if (!session.Metadata.TryGetValue("userId", out string? userIdString) ||
-                !session.Metadata.TryGetValue("variantIds", out string? variantIdsString))
-            {
-                return BadRequest("Missing metadata in session");
-            }
-
-            if (!int.TryParse(userIdString, out int userId))
-            {
-                return BadRequest("Invalid userId");
-            }
-
-            List<int> variantIds = variantIdsString.Split(',')
-                                    .Where(s => int.TryParse(s, out _))
-                                    .Select(int.Parse)
-                                    .ToList();
-
-            List<ProductVariantModel> orderedVariants = await _context.ProductVariants
-                .Include(v => v.Product)
-                .Where(v => variantIds.Contains(v.Id))
-                .ToListAsync();
-
-            if (orderedVariants.Count == 0)
-            {
-                return BadRequest("No product variants found.");
+                Console.WriteLine($"Webhook: Order for Stripe Session ID {session.Id} already exists. Skipping duplicate creation.");
+                return Ok();
             }
 
             OrderModel newOrder = new()
@@ -144,40 +198,49 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
                 OrderedAt = DateTime.UtcNow,
                 Status = OrderStatus.Completed,
                 StripeCheckoutSessionId = session.Id,
-                StripePaymentIntentId = session.PaymentIntent.Id,
-                TotalCost = orderedVariants.Sum(v => v.Price),
+                StripePaymentIntentId = session.PaymentIntentId,
+                TotalCost = shoppingCart.Items.Sum(i => i.ProductVariant?.Price * i.Quantity ?? 0),
                 OrderItems = []
             };
 
-            foreach (var variant in orderedVariants)
+            foreach (var item in shoppingCart.Items)
             {
+                if (item.ProductVariant == null || item.ProductVariant.Product == null)
+                {
+                    Console.WriteLine($"Webhook Error: ProductVariant or Product is null for cart item ID: {item.Id}. Cannot create order item.");
+                    continue;
+                }
+
                 newOrder.OrderItems.Add(new OrderItemModel
                 {
-                    ProductVariantId = variant.Id,
-                    ProductNameAtOrder = variant.Product.Name,
-                    VariantNameAtOrder = variant.Name,
-                    Quantity = 1,
-                    PriceAtOrder = variant.Price,
+                    ProductVariantId = item.ProductVariantId,
+                    ProductNameAtOrder = item.ProductVariant.Product.Name,
+                    VariantNameAtOrder = item.ProductVariant.Name,
+                    Quantity = item.Quantity,
+                    PriceAtOrder = item.ProductVariant.Price,
                 });
             }
 
             _context.Orders.Add(newOrder);
 
+            _context.ShoppingCartItems.RemoveRange(shoppingCart.Items);
+
             await _context.SaveChangesAsync();
+            Console.WriteLine($"Order {newOrder.Id} successfully created for user {newOrder.UserId}. Shopping cart {shoppingCart.Id} items cleared.");
             return Ok();
         }
-        catch (StripeException e)
+        catch (DbUpdateException dbEx)
         {
-            Console.WriteLine($"Error: {e}");
-            return BadRequest();
+            Console.WriteLine($"Webhook DbUpdateException: {dbEx.Message}");
+            Console.WriteLine($"Inner Exception: {dbEx.InnerException?.Message}");
+            Console.WriteLine($"Stack Trace: {dbEx.StackTrace}");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Database update failed during order creation.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine($"Error: {e}");
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new { message = "An unexpected problem occurred" }
-            );
+            Console.WriteLine($"Webhook General Exception: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+            return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred during webhook processing.");
         }
     }
 }

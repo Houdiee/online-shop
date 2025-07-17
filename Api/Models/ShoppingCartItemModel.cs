@@ -6,8 +6,6 @@ public class ShoppingCartItemModel
 {
   public int Id { get; set; }
 
-  public required string ProductVariantName { get; set; }
-
   public required int Quantity { get; set; }
 
   [JsonIgnore]
@@ -15,8 +13,6 @@ public class ShoppingCartItemModel
   [JsonIgnore]
   public ShoppingCartModel ShoppingCart { get; set; } = null!;
 
-  [JsonIgnore]
   public int ProductVariantId { get; set; }
-  [JsonIgnore]
   public ProductVariantModel ProductVariant { get; set; } = null!;
 }

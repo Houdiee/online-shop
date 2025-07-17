@@ -1,4 +1,17 @@
 {
-  "userId": 1,
-  "variantIds": [1, 2]
+  "id": 1,
+  "items": [
+    {
+      "productVariantId": 1,
+      "quantity": 1
+    },
+    {
+      "productVariantId": 2,
+      "quantity": 3
+    },
+    {
+      "productVariantId": 3,
+      "quantity": 2
+    }
+  ]
 }

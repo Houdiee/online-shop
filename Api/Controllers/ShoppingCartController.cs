@@ -52,7 +52,6 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
             ShoppingCartItemModel? newCartItem = new()
             {
                 ProductVariantId = request.ProductVariantId,
-                ProductVariantName = $"{productVariant.Product.Name} - {productVariant.Name}",
                 Quantity = request.Quantity,
                 ShoppingCartId = shoppingCart.Id
             };
