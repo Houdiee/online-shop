@@ -32,28 +32,6 @@ public class DashboardController(ApiDbContext context) : ControllerBase
             .CountAsync(ords => ords.OrderedAt >= thirtyDaysAgo && ords.Status == OrderStatus.Completed);
 
 
-        var salesDataFromDb = await _context.Orders
-               .Where(ords => ords.OrderedAt >= thirtyDaysAgo && ords.Status == OrderStatus.Completed)
-               .GroupBy(ords => ords.OrderedAt.Date)
-               .Select(group => new { Date = group.Key, TotalSales = group.Sum(ords => ords.TotalCost) })
-               .ToDictionaryAsync(s => s.Date, s => s.TotalSales);
-
-        List<(DateTime, decimal)> salesLast30DaysDaily = [];
-
-        for (int i = 0; i < 30; i++)
-        {
-            DateTime currentDate = thirtyDaysAgo.AddDays(i).Date;
-            decimal salesForDay = 0;
-
-            if (salesDataFromDb.TryGetValue(currentDate, out decimal sales))
-            {
-                salesForDay = sales;
-            }
-
-            salesLast30DaysDaily.Add((currentDate, salesForDay));
-        }
-
-
         decimal totalRevenueLast24Hours = await _context
             .Orders
             .Where(ords => ords.OrderedAt >= yesterday && ords.Status == OrderStatus.Completed)
@@ -122,8 +100,6 @@ public class DashboardController(ApiDbContext context) : ControllerBase
             ProductsSoldLast24Hours = productsSoldLast24Hours,
             ProductsSoldLast7Days = productsSoldLast7Days,
             ProductsSoldLast30Days = productsSoldLast30Days,
-
-            SalesLast30DaysDaily = salesLast30DaysDaily,
 
             TotalRevenueLast24Hours = totalRevenueLast24Hours,
             TotalRevenueLast7Days = totalRevenueLast7Days,

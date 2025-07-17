@@ -6,8 +6,6 @@ public class AdminDashboardModel
   public required int ProductsSoldLast7Days { get; set; }
   public required int ProductsSoldLast30Days { get; set; }
 
-  public required List<(DateTime, decimal)> SalesLast30DaysDaily { get; set; }
-
   public required decimal TotalRevenueLast24Hours { get; set; }
   public required decimal TotalRevenueLast7Days { get; set; }
   public required decimal TotalRevenueLast30Days { get; set; }
@@ -30,3 +28,8 @@ public class AdminDashboardModel
   public required List<string> TopTagsUsed { get; set; }
 }
 
+public class DailySalesData
+{
+  public DateTime Date { get; set; }
+  public decimal Sales { get; set; }
+}

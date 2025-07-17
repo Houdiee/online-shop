@@ -129,7 +129,6 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
             return StatusCode(StatusCodes.Status500InternalServerError, "Error processing webhook event.");
         }
 
-
         if (stripeEvent.Type != EventTypes.CheckoutSessionCompleted)
         {
             return Ok();
@@ -183,7 +182,6 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
                 return Ok();
             }
             Console.WriteLine($"Webhook: Found shopping cart {shoppingCart.Id} with {shoppingCart.Items.Count} items.");
-
 
             bool orderExists = await _context.Orders.AnyAsync(o => o.StripeCheckoutSessionId == session.Id);
             if (orderExists)
