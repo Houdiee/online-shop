@@ -63,9 +63,7 @@ export default function ProductDetails() {
                   <Typography.Text
                     key={index}
                     type={selectedVariant.name === variant.name ? undefined : "secondary"}
-                    className={`
-                      ${selectedVariant.name === variant.name ? "text-blue-500 font-bold" : "font-normal"}
-                    `}
+                    className={selectedVariant.name === variant.name ? "!text-blue-500 font-bold" : "font-normal"}
                   >
                     {variant.name}
                   </Typography.Text>
