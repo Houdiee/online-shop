@@ -1,4 +1,5 @@
 import { Button, Carousel, ConfigProvider, Flex, Image, Typography } from "antd";
+import { useState } from "react";
 
 export default function ProductDetails() {
   const images = [
@@ -6,6 +7,14 @@ export default function ProductDetails() {
     "/straps_1.png",
     "/straps_2.png",
   ];
+
+  const variants = [
+    { name: "Black", image: "/straps.png" },
+    { name: "Blue", image: "/straps_1.png" },
+    { name: "Red", image: "/straps_2.png" },
+  ];
+
+  const [selectedVariant, setSelectedVariant] = useState(variants[0]);
 
   return (
     <>
@@ -35,8 +44,34 @@ export default function ProductDetails() {
 
           <Flex vertical gap={10}>
             <Typography.Title level={1} className="!m-0">Product Title</Typography.Title>
-            <Typography.Title level={2} type="secondary" className="!m-0">Variant</Typography.Title>
             <Typography.Title level={2} className="!m-0">$AUD</Typography.Title>
+
+            <Flex gap={10} className="!mt-10">
+              {variants.map((variant, index) => (
+                <Flex vertical align="center">
+                  <Image
+                    key={index}
+                    src={variant.image}
+                    preview={false}
+                    width={60}
+                    className={`
+                      cursor-pointer
+                      ${selectedVariant.name === variant.name ? "border-2 border-blue-500" : "border border-gray-300"}
+                    `}
+                    onClick={() => setSelectedVariant(variant)}
+                  />
+                  <Typography.Text
+                    key={index}
+                    type={selectedVariant.name === variant.name ? undefined : "secondary"}
+                    className={`
+                      ${selectedVariant.name === variant.name ? "text-blue-500 font-bold" : "font-normal"}
+                    `}
+                  >
+                    {variant.name}
+                  </Typography.Text>
+                </Flex>
+              ))}
+            </Flex>
           </Flex>
 
           <Typography.Paragraph type="secondary" className="!mt-auto">
