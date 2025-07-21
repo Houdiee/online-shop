@@ -1,5 +1,11 @@
-import { Button, Carousel, ConfigProvider, Flex, Image, Typography } from "antd";
+import { ShoppingCartOutlined } from "@ant-design/icons";
+import { Button, Carousel, ConfigProvider, Divider, Flex, Form, Image, InputNumber, Space, Tag, Typography } from "antd";
 import { useState } from "react";
+
+export type AddShoppingCartItemRequest = {
+  productVariantId: number;
+  quantity: number;
+}
 
 export default function ProductDetails() {
   const images = [
@@ -8,12 +14,19 @@ export default function ProductDetails() {
     "/straps_2.png",
   ];
 
+  const tags = [
+    "fitness",
+    "hardware",
+    "equipment",
+  ];
+
   const variants = [
     { name: "Black", image: "/straps.png" },
     { name: "Blue", image: "/straps_1.png" },
     { name: "Red", image: "/straps_2.png" },
   ];
 
+  const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState(variants[0]);
 
   return (
@@ -46,11 +59,22 @@ export default function ProductDetails() {
             <Typography.Title level={1} className="!m-0">Product Title</Typography.Title>
             <Typography.Title level={2} className="!m-0">$AUD</Typography.Title>
 
+            <Flex>
+              {tags.map((tag, index) => (
+                <Tag key={index}>
+                  {tag}
+                </Tag>
+              ))}
+            </Flex>
+
+            <Divider className="!mb-0" />
+          </Flex>
+
+          <Space direction="vertical" size="large">
             <Flex gap={10} className="!mt-10">
               {variants.map((variant, index) => (
-                <Flex vertical align="center">
+                <Flex vertical align="center" key={index}>
                   <Image
-                    key={index}
                     src={variant.image}
                     preview={false}
                     width={60}
@@ -61,8 +85,6 @@ export default function ProductDetails() {
                     onClick={() => setSelectedVariant(variant)}
                   />
                   <Typography.Text
-                    key={index}
-                    type={selectedVariant.name === variant.name ? undefined : "secondary"}
                     className={selectedVariant.name === variant.name ? "!text-blue-500 font-bold" : "font-normal"}
                   >
                     {variant.name}
@@ -70,8 +92,20 @@ export default function ProductDetails() {
                 </Flex>
               ))}
             </Flex>
-          </Flex>
 
+            <Form>
+              <Form.Item label="Quantity">
+                <InputNumber
+                  value={quantity}
+                  min={1}
+                  onChange={(value: number | null) => setQuantity(value || 1)}
+                  className="text-center"
+                />
+              </Form.Item>
+            </Form>
+
+
+          </Space>
           <Typography.Paragraph type="secondary" className="!mt-auto">
             Description is not available for this product.
             Description is not available for this product.
@@ -83,9 +117,14 @@ export default function ProductDetails() {
             Description is not available for this product.
           </Typography.Paragraph>
 
-          <Button size="large" type="primary" className="!mt-auto">
-            Add to Cart
+          <Button
+            size="large"
+            type="primary"
+            className="!mt-auto"
+          >
+            <ShoppingCartOutlined /> Add to Cart
           </Button>
+
         </Flex>
 
       </Flex>
