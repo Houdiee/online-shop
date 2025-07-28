@@ -1,6 +1,7 @@
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import { Breadcrumb, Button, Carousel, Col, ConfigProvider, Divider, Flex, Form, Image, InputNumber, Row, Space, Tag, Typography } from "antd";
 import { useState } from "react";
+import ProductImageCarousel from "../components/ProductImageCarousel";
 
 export type AddShoppingCartItemRequest = {
   productVariantId: number;
@@ -44,27 +45,7 @@ export default function ProductDetails() {
                 { title: selectedVariant.name },
               ]}
               />
-              <ConfigProvider
-                theme={{ components: { Carousel: { arrowSize: 40 } } }}
-              >
-                <Carousel
-                  arrows={true}
-                  dots={true}
-                  infinite={true}
-                  autoplay={true}
-                  className="w-full h-full"
-                >
-                  {images.map((src, index) => (
-                    <div key={index} className="h-full flex items-center justify-center">
-                      <Image
-                        preview={false}
-                        src={src}
-                        className="max-w-full max-h-full object-contain"
-                      />
-                    </div>
-                  ))}
-                </Carousel >
-              </ConfigProvider>
+              <ProductImageCarousel imageUrls={images} />
             </Flex>
           </Col>
 
