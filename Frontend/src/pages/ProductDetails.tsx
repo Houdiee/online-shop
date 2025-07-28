@@ -46,7 +46,6 @@ export default function ProductDetails() {
               />
               <ConfigProvider
                 theme={{ components: { Carousel: { arrowSize: 40 } } }}
-                className="flex-grow"
               >
                 <Carousel
                   arrows={true}
