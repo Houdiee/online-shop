@@ -6,22 +6,10 @@ import ProductDescription from "../components/product-details/ProductDescription
 import ProductInfo from "../components/product-details/ProductInfo";
 import ProductVariantSelector from "../components/product-details/ProductVariantSelector";
 import QuantitySelector from "../components/product-details/QuantitySelector";
-import type { Product, ProductVariant } from "../types/product";
+import type { ProductVariant } from "../types/product";
+import { product } from "../mock/product";
 
 export default function ProductDetails() {
-  const product: Product = {
-    id: 1,
-    name: "Straps",
-    description: null,
-    tags: ["fitness", "health", "equipment"],
-    variants: [
-      { id: 1, name: "Black", imageUrls: ["/straps.png", "/straps_1.png"], price: 12.00, discountedPrice: null, stockQuantity: 60, createdAt: new Date() },
-      { id: 2, name: "Blue", imageUrls: ["/straps_1.png"], price: 10.00, discountedPrice: null, stockQuantity: 60, createdAt: new Date() },
-      { id: 3, name: "Red", imageUrls: ["/straps_2.png"], price: 11.50, discountedPrice: null, stockQuantity: 60, createdAt: new Date() },
-    ],
-    createdAt: new Date(),
-  };
-
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(product.variants[0]);
 
