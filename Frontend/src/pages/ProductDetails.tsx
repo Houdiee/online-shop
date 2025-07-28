@@ -1,12 +1,11 @@
-import { ShoppingCartOutlined } from "@ant-design/icons";
-import { Breadcrumb, Button, Carousel, Col, ConfigProvider, Divider, Flex, Form, Image, InputNumber, Row, Space, Tag, Typography } from "antd";
+import { Breadcrumb, Col, Divider, Flex, Row, Space } from "antd";
 import { useState } from "react";
-import ProductImageCarousel from "../components/ProductImageCarousel";
-
-export type AddShoppingCartItemRequest = {
-  productVariantId: number;
-  quantity: number;
-}
+import ProductImageCarousel from "../components/product-details/ProductImageCarousel";
+import AddToCartButton from "../components/product-details/AddToCartButton";
+import ProductDescription from "../components/product-details/ProductDescription";
+import ProductInfo from "../components/product-details/ProductInfo";
+import ProductVariantSelector, { type Variant } from "../components/product-details/ProductVariantSelector";
+import QuantitySelector from "../components/product-details/QuantitySelector";
 
 export default function ProductDetails() {
   const images = [
@@ -21,10 +20,10 @@ export default function ProductDetails() {
     "equipment",
   ];
 
-  const variants = [
-    { name: "Black", image: "/straps.png" },
-    { name: "Blue", image: "/straps_1.png" },
-    { name: "Red", image: "/straps_2.png" },
+  const variants: Variant[] = [
+    { id: 1, name: "Black", image: "/straps.png" },
+    { id: 2, name: "Blue", image: "/straps_1.png" },
+    { id: 3, name: "Red", image: "/straps_2.png" },
   ];
 
   const [quantity, setQuantity] = useState(1);
@@ -36,7 +35,6 @@ export default function ProductDetails() {
         <Row gutter={[24, 24]} justify="center" align="stretch">
 
           {/* Left side (aka image) */}
-          {/* Changed md to 24 to stack on medium screens and below */}
           <Col xs={24} md={24} lg={12} xl={12}>
             <Flex vertical className="h-full">
               <Breadcrumb items={[
@@ -50,74 +48,20 @@ export default function ProductDetails() {
           </Col>
 
           {/* Right side (aka title, description, variant, etc.) */}
-          {/* Changed md to 24 to stack on medium screens and below */}
           <Col xs={24} md={24} lg={12} xl={12}>
             <Flex vertical gap={10} className="h-full">
-              <Typography.Title level={1} className="!m-0">Product Title</Typography.Title>
-              <Typography.Title level={2} className="!m-0">$AUD</Typography.Title>
-
-              <Flex>
-                {tags.map((tag, index) => (
-                  <Tag key={index}>
-                    {tag}
-                  </Tag>
-                ))}
-              </Flex>
+              <ProductInfo name="Product Title" price="$AUD" tags={tags} />
 
               <Divider className="!mb-0" />
 
               <Space direction="vertical" size="large" className="w-full">
-                <Flex gap={10} className="!mt-10">
-                  {variants.map((variant, index) => (
-                    <Flex vertical align="center" key={index}>
-                      <Image
-                        src={variant.image}
-                        preview={false}
-                        width={60}
-                        className={`
-                          cursor-pointer
-                          ${selectedVariant.name === variant.name ? "border-2 border-blue-500" : "border border-gray-300"}
-                        `}
-                        onClick={() => setSelectedVariant(variant)}
-                      />
-                      <Typography.Text
-                        className={selectedVariant.name === variant.name ? "!text-blue-500 font-bold" : "font-normal"}
-                      >
-                        {variant.name}
-                      </Typography.Text>
-                    </Flex>
-                  ))}
-                </Flex>
-
-                <Form layout="vertical">
-                  <Form.Item label="Quantity">
-                    <InputNumber
-                      value={quantity}
-                      min={1}
-                      onChange={(value: number | null) => setQuantity(value || 1)}
-                    />
-                  </Form.Item>
-                </Form>
+                <ProductVariantSelector variants={variants} selectedVariant={selectedVariant} onSelectVariant={setSelectedVariant} />
+                <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} />
               </Space>
 
-              <Typography.Paragraph type="secondary" className="!mt-auto">
-                Description is not available for this product.
-                Description is not available for this product.
-                Description is not available for this product.
-                Description is not available for this product.
-                Description is not available for this product.
-                Description is not available for this product.
-                Description is not available for this product.
-                Description is not available for this product.
-              </Typography.Paragraph>
+              <ProductDescription description="Description is not available for this product." />
 
-              <Button
-                size="large"
-                type="primary"
-                className="!mt-auto"
-              >
-                <ShoppingCartOutlined /> Add to Cart
-              </Button>
+              <AddToCartButton productVariantId={selectedVariant.id} quantity={quantity} />
             </Flex>
           </Col>
         </Row >
