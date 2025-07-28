@@ -9,25 +9,13 @@ import QuantitySelector from "../components/product-details/QuantitySelector";
 import type { Product, ProductVariant } from "../types/product";
 
 export default function ProductDetails() {
-  const images = [
-    "/straps.png",
-    "/straps_1.png",
-    "/straps_2.png",
-  ];
-
-  const tags = [
-    "fitness",
-    "hardware",
-    "equipment",
-  ];
-
   const product: Product = {
     id: 1,
     name: "Straps",
     description: null,
     tags: ["fitness", "health", "equipment"],
     variants: [
-      { id: 1, name: "Black", imageUrls: ["/straps.png"], price: 12.00, discountedPrice: null, stockQuantity: 60, createdAt: new Date() },
+      { id: 1, name: "Black", imageUrls: ["/straps.png", "/straps_1.png"], price: 12.00, discountedPrice: null, stockQuantity: 60, createdAt: new Date() },
       { id: 2, name: "Blue", imageUrls: ["/straps_1.png"], price: 10.00, discountedPrice: null, stockQuantity: 60, createdAt: new Date() },
       { id: 3, name: "Red", imageUrls: ["/straps_2.png"], price: 11.50, discountedPrice: null, stockQuantity: 60, createdAt: new Date() },
     ],
@@ -51,14 +39,14 @@ export default function ProductDetails() {
                 { title: selectedVariant.name },
               ]}
               />
-              <ProductImageCarousel imageUrls={images} />
+              <ProductImageCarousel imageUrls={selectedVariant.imageUrls} />
             </Flex>
           </Col>
 
           {/* Right side (aka title, description, variant, etc.) */}
           <Col xs={24} md={24} lg={12} xl={12}>
             <Flex vertical gap={10} className="h-full">
-              <ProductInfo name="Product Title" price={selectedVariant.price} tags={tags} />
+              <ProductInfo name={product.name} price={selectedVariant.price} tags={product.tags} />
 
               <Divider className="!mb-0" />
 
@@ -67,7 +55,9 @@ export default function ProductDetails() {
                 <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} />
               </Space>
 
-              <ProductDescription description={product.description} />
+              <Flex>
+                <ProductDescription description={product.description} />
+              </Flex>
 
               <AddToCartButton productVariantId={selectedVariant.id} quantity={quantity} />
             </Flex>
