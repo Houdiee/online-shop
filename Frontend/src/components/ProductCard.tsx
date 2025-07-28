@@ -1,20 +1,26 @@
 import { Link } from "react-router-dom";
 import { Card, Flex, Image, Typography } from "antd";
+import type { Product } from "../types/product";
 
-export default function ProductCard() {
-  const productName = "straps";
+interface ProductCardProps {
+  product: Product;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
+  const defaultVariant = product.variants[0];
+  const defaultImage = defaultVariant.imageUrls[0];
 
   return (
     <>
       <Card variant="borderless" hoverable className="w-70">
         <Flex vertical gap={10}>
-          <Link to={productName}>
-            <Image preview={false} src="/straps.png" />
+          <Link to={product.id.toString()}>
+            <Image preview={false} src={defaultImage} />
           </Link>
           <Flex vertical>
-            <Typography.Text className="!text-md">Product Title</Typography.Text>
-            <Typography.Text type="secondary">Variant</Typography.Text>
-            <Typography.Text strong className="!text-md">$AUD</Typography.Text>
+            <Typography.Text className="!text-md">{product.name}</Typography.Text>
+            <Typography.Text type="secondary">{defaultVariant.name}</Typography.Text>
+            <Typography.Text strong className="!text-md">${defaultVariant.price}</Typography.Text>
           </Flex>
         </Flex>
       </Card>
