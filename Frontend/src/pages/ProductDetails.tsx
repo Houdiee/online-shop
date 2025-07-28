@@ -4,8 +4,9 @@ import ProductImageCarousel from "../components/product-details/ProductImageCaro
 import AddToCartButton from "../components/product-details/AddToCartButton";
 import ProductDescription from "../components/product-details/ProductDescription";
 import ProductInfo from "../components/product-details/ProductInfo";
-import ProductVariantSelector, { type Variant } from "../components/product-details/ProductVariantSelector";
+import ProductVariantSelector from "../components/product-details/ProductVariantSelector";
 import QuantitySelector from "../components/product-details/QuantitySelector";
+import type { Product, ProductVariant } from "../types/product";
 
 export default function ProductDetails() {
   const images = [
@@ -20,14 +21,21 @@ export default function ProductDetails() {
     "equipment",
   ];
 
-  const variants: Variant[] = [
-    { id: 1, name: "Black", image: "/straps.png" },
-    { id: 2, name: "Blue", image: "/straps_1.png" },
-    { id: 3, name: "Red", image: "/straps_2.png" },
-  ];
+  const product: Product = {
+    id: 1,
+    name: "Straps",
+    description: null,
+    tags: ["fitness", "health", "equipment"],
+    variants: [
+      { id: 1, name: "Black", imageUrls: ["/straps.png"], price: 12.00, discountedPrice: null, stockQuantity: 60, createdAt: new Date() },
+      { id: 2, name: "Blue", imageUrls: ["/straps_1.png"], price: 10.00, discountedPrice: null, stockQuantity: 60, createdAt: new Date() },
+      { id: 3, name: "Red", imageUrls: ["/straps_2.png"], price: 11.50, discountedPrice: null, stockQuantity: 60, createdAt: new Date() },
+    ],
+    createdAt: new Date(),
+  };
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedVariant, setSelectedVariant] = useState(variants[0]);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(product.variants[0]);
 
   return (
     <div className="px-4 py-8 md:px-8 lg:px-16 xl:px-24">
@@ -50,16 +58,16 @@ export default function ProductDetails() {
           {/* Right side (aka title, description, variant, etc.) */}
           <Col xs={24} md={24} lg={12} xl={12}>
             <Flex vertical gap={10} className="h-full">
-              <ProductInfo name="Product Title" price="$AUD" tags={tags} />
+              <ProductInfo name="Product Title" price={selectedVariant.price} tags={tags} />
 
               <Divider className="!mb-0" />
 
               <Space direction="vertical" size="large" className="w-full">
-                <ProductVariantSelector variants={variants} selectedVariant={selectedVariant} onSelectVariant={setSelectedVariant} />
+                <ProductVariantSelector variants={product.variants} selectedVariant={selectedVariant} onSelectVariant={setSelectedVariant} />
                 <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} />
               </Space>
 
-              <ProductDescription description="Description is not available for this product." />
+              <ProductDescription description={product.description} />
 
               <AddToCartButton productVariantId={selectedVariant.id} quantity={quantity} />
             </Flex>
