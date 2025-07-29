@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, Flex, Image, Typography } from "antd";
-import type { Product } from "../types/product";
+import type { Product } from "../../types/product";
 
 interface ProductCardProps {
   product: Product;
@@ -16,12 +16,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         <Flex vertical gap={10}>
           <Link to={product.id.toString()}>
             <Image preview={false} src={defaultImage} />
+            <Flex vertical>
+              <Typography.Text strong className="!text-md">{product.name}</Typography.Text>
+              <Typography.Text type="secondary">{defaultVariant.name}</Typography.Text>
+              <Typography.Text className="!text-md">${defaultVariant.price}</Typography.Text>
+            </Flex>
           </Link>
-          <Flex vertical>
-            <Typography.Text className="!text-md">{product.name}</Typography.Text>
-            <Typography.Text type="secondary">{defaultVariant.name}</Typography.Text>
-            <Typography.Text strong className="!text-md">${defaultVariant.price}</Typography.Text>
-          </Flex>
         </Flex>
       </Card>
     </>
