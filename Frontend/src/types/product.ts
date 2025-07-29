@@ -10,7 +10,7 @@ export type Product = {
 export type ProductVariant = {
   id: number;
   name: string;
-  imageUrls: string[];
+  photoUrls: string[];
   price: number;
   discountedPrice: number | null;
   stockQuantity: number;

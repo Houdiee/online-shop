@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, Flex, Image, Typography } from "antd";
 import type { Product } from "../../types/product";
+import { API_BASE_URL } from "../../main";
 
 interface ProductCardProps {
   product: Product;
@@ -8,7 +9,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const defaultVariant = product.variants[0];
-  const defaultImage = defaultVariant.imageUrls[0];
+  const defaultImage = `${API_BASE_URL}/${defaultVariant.photoUrls[0]}`;
 
   return (
     <Card

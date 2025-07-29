@@ -131,7 +131,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
         using FileStream stream = new(fileDestinationPath, FileMode.Create);
         await file.CopyToAsync(stream);
 
-        string uploadedRelativePath = $"/images/{uniqueFileName}";
+        string uploadedRelativePath = $"images/{uniqueFileName}";
         uploadedPhotoUrls.Add(uploadedRelativePath);
       }
       catch (Exception e)

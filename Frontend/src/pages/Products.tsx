@@ -1,14 +1,23 @@
 import { Flex } from "antd";
 import ProductCard from "../components/products/ProductCard";
-import { product } from "../mock/product";
-import type { Product } from "../types/product";
+import { type Product } from "../types/product";
 import FilterMenu from "../components/products/FilterMenu";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { API_BASE_URL } from "../main";
 
 export default function Products() {
-  const products: Product[] = Array.from({ length: 50 }).map((_, index) => ({
-    ...product,
-    id: product.id + index,
-  }));
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const response = await axios.get(`${API_BASE_URL}/products`);
+      const fetchedProducts: Product[] = response.data;
+      setProducts(fetchedProducts);
+    };
+
+    fetchProducts();
+  }, [products]);
 
   return (
     <>
