@@ -11,19 +11,21 @@ export default function ProductCard({ product }: ProductCardProps) {
   const defaultImage = defaultVariant.imageUrls[0];
 
   return (
-    <>
-      <Card variant="borderless" hoverable className="w-70">
-        <Flex vertical gap={10}>
-          <Link to={product.id.toString()}>
-            <Image preview={false} src={defaultImage} />
-            <Flex vertical>
-              <Typography.Text strong className="!text-md">{product.name}</Typography.Text>
-              <Typography.Text type="secondary">{defaultVariant.name}</Typography.Text>
-              <Typography.Text className="!text-md">${defaultVariant.price}</Typography.Text>
-            </Flex>
-          </Link>
-        </Flex>
-      </Card>
-    </>
+    <Card
+      variant="borderless"
+      hoverable
+      className="w-70"
+    >
+      <Flex vertical gap={10}>
+        <Link to={product.id.toString()}>
+          <Image preview={false} src={defaultImage} />
+          <Flex vertical>
+            <Typography.Text strong className="!text-md">{product.name}</Typography.Text>
+            <Typography.Text type="secondary">{defaultVariant.name}</Typography.Text>
+            <Typography.Text className="!text-md">${defaultVariant.price}</Typography.Text>
+          </Flex>
+        </Link>
+      </Flex>
+    </Card>
   );
 }
