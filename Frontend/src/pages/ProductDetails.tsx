@@ -7,6 +7,7 @@ import ProductInfo from "../components/product-details/ProductInfo";
 import ProductVariantSelector from "../components/product-details/ProductVariantSelector";
 import QuantitySelector from "../components/product-details/QuantitySelector";
 import type { Product, ProductVariant } from "../types/product";
+import axios from "axios";
 
 export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
@@ -14,7 +15,10 @@ export default function ProductDetails() {
   const [product, setProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-
+    const fetchProduct = async () => {
+      const respone = axios.get()
+    };
+    fetchProduct();
   }, [product]);
 
   return (
