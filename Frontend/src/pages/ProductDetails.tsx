@@ -1,17 +1,21 @@
 import { Breadcrumb, Col, Divider, Flex, Row, Space } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProductImageCarousel from "../components/product-details/ProductImageCarousel";
 import AddToCartButton from "../components/product-details/AddToCartButton";
 import ProductDescription from "../components/product-details/ProductDescription";
 import ProductInfo from "../components/product-details/ProductInfo";
 import ProductVariantSelector from "../components/product-details/ProductVariantSelector";
 import QuantitySelector from "../components/product-details/QuantitySelector";
-import type { ProductVariant } from "../types/product";
-import { product } from "../mock/product";
+import type { Product, ProductVariant } from "../types/product";
 
 export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(product.variants[0]);
+  const [product, setProduct] = useState<Product | null>(null);
+
+  useEffect(() => {
+
+  }, [product]);
 
   return (
     <div className="px-4 py-8 md:px-8 lg:px-16 xl:px-24">
@@ -27,14 +31,14 @@ export default function ProductDetails() {
                 { title: selectedVariant.name },
               ]}
               />
-              <ProductImageCarousel imageUrls={selectedVariant.imageUrls} />
+              <ProductImageCarousel imageUrls={selectedVariant.photoUrls} />
             </Flex>
           </Col>
 
           {/* Right side (aka title, description, variant, etc.) */}
           <Col xs={24} md={24} lg={12} xl={12}>
             <Flex vertical gap={10} className="h-full">
-              <ProductInfo name={product.name} price={selectedVariant.price} tags={product.tags} />
+              <ProductInfo name={product.name} price={selectedVariant.price.toFixed()} tags={product.tags} />
 
               <Divider className="!mb-0" />
 
