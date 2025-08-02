@@ -62,7 +62,6 @@ export default function Products() {
 
         <Col xs={24} md={16} lg={17} xl={18}>
           <Flex wrap gap={14}>
-            {/* Map over the filtered and sorted products */}
             {displayedProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}

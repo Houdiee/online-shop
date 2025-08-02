@@ -19,7 +19,11 @@ export default function ProductCard({ product }: ProductCardProps) {
         className="w-70"
       >
         <Flex vertical gap={10}>
-          <Image preview={false} src={defaultImage} />
+          <Image
+            preview={false}
+            src={defaultImage}
+            className="!h-70 object-cover"
+          />
           <Flex vertical>
             <Typography.Text strong className="!text-md">{product.name}</Typography.Text>
             <Typography.Text type="secondary">{defaultVariant.name}</Typography.Text>
