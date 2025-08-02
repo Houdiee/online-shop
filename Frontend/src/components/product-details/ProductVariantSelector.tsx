@@ -10,14 +10,15 @@ type ProductVariantSelectorProps = {
 export default function ProductVariantSelector({ variants, selectedVariant, onSelectVariant }: ProductVariantSelectorProps) {
   return (
     <Flex gap={10} className="!mt-10">
-      {variants.map((variant, index) => (
+      {variants.map((variant, _) => (
         <Flex vertical align="center" key={variant.id} onClick={() => onSelectVariant(variant)}>
           <Image
             src={variant.photoUrls[0]}
             preview={false}
             width={60}
+            height={60}
             className={`
-              cursor-pointer
+              cursor-pointer object-cover
               ${selectedVariant.id === variant.id ? "border-2 border-blue-500" : "border border-gray-300"}
             `}
           />

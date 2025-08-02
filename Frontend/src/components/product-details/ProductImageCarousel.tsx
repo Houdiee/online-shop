@@ -18,11 +18,11 @@ export default function ProductImageCarousel({ photoUrls }: ProductImageCarousel
           className="w-full h-full"
         >
           {photoUrls.map((src: string, index: number) => (
-            <div key={index} className="h-full flex items-center justify-center">
+            <div key={index} className="aspect-square overflow-hidden">
               <Image
                 preview={false}
                 src={src}
-                className="max-w-full max-h-full object-contain"
+                className="w-full h-full object-cover"
               />
             </div>
           ))}

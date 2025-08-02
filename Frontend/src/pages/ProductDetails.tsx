@@ -9,7 +9,7 @@ import QuantitySelector from "../components/product-details/QuantitySelector";
 import type { Product, ProductVariant } from "../types/product";
 import axios from "axios";
 import { API_BASE_URL } from "../main";
-import { useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 export default function ProductDetails() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -17,6 +17,12 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
 
   const { id, variantId } = useParams<{ id: string; variantId?: string }>();
+  const navigate = useNavigate();
+
+  const handleVariantSelect = (variant: ProductVariant) => {
+    setSelectedVariant(variant);
+    navigate(`/products/${id}/${variant.id}`);
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -25,20 +31,19 @@ export default function ProductDetails() {
         const fetchedProduct: Product = response.data;
         setProduct(fetchedProduct);
 
-        let initialVariant: ProductVariant;
-        if (variantId) {
-          initialVariant = fetchedProduct.variants.find(v => v.id === Number(variantId)) || fetchedProduct.variants[0];
-        } else {
-          initialVariant = fetchedProduct.variants.find(v => v.id === 1) || fetchedProduct.variants[0];
+        if (!variantId) {
+          navigate(`/products/${id}/${fetchedProduct.variants[0].id}`, { replace: true });
+          return;
         }
 
+        const initialVariant = fetchedProduct.variants.find(v => v.id === Number(variantId)) || fetchedProduct.variants[0];
         setSelectedVariant(initialVariant);
       } catch (error) {
         console.error("Failed to fetch product:", error);
       }
     };
     fetchProduct();
-  }, [id, variantId]);
+  }, [id, variantId, navigate]);
 
   if (!product || !selectedVariant) {
     return <div>Loading...</div>;
@@ -52,11 +57,12 @@ export default function ProductDetails() {
           {/* Left side (aka image) */}
           <Col xs={24} md={24} lg={12} xl={12}>
             <Flex vertical className="h-full">
-              <Breadcrumb items={[
-                { title: "Products", path: "/products" },
-                { title: "Name", path: "/products/straps" }, // TODO
-                { title: selectedVariant.name },
-              ]}
+              <Breadcrumb
+                items={[
+                  { title: <Link to="/products">Products</Link>, },
+                  { title: <Link to={`/products/${product.id}/${product.variants[0].id}`}>{product.name}</Link>, },
+                  { title: selectedVariant.name, },
+                ]}
               />
               <ProductImageCarousel photoUrls={selectedVariant.photoUrls} />
             </Flex>
@@ -70,7 +76,7 @@ export default function ProductDetails() {
               <Divider className="!mb-0" />
 
               <Space direction="vertical" size="large" className="w-full">
-                <ProductVariantSelector variants={product.variants} selectedVariant={selectedVariant} onSelectVariant={setSelectedVariant} />
+                <ProductVariantSelector variants={product.variants} selectedVariant={selectedVariant} onSelectVariant={handleVariantSelect} />
                 <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} />
               </Space>
 
