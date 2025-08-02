@@ -21,10 +21,6 @@ export default function Products() {
 
   return (
     <>
-      <Flex justify="center" className="h-100">
-        hello
-      </Flex>
-
       <Flex>
         <FilterMenu />
         <Flex wrap gap={14} justify="center">

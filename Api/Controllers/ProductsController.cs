@@ -50,12 +50,18 @@ public class ProductsController(ApiDbContext context) : ControllerBase
   {
 
     ProductModel? product = await _context.Products
-                                    .Include(static p => p.Variants)
-                                    .FirstOrDefaultAsync(p => p.Id == productId);
+      .Include(static p => p.Variants)
+      .FirstOrDefaultAsync(p => p.Id == productId);
 
     if (product == null)
     {
       return BadRequest(new { message = $"Product with id {productId} not found" });
+    }
+
+    string baseUrl = $"{Request.Scheme}://{Request.Host}";
+    foreach (var variant in product.Variants)
+    {
+      variant.PhotoUrls = variant.PhotoUrls.Select(url => baseUrl + url).ToList();
     }
 
     return Ok(product);
@@ -87,6 +93,8 @@ public class ProductsController(ApiDbContext context) : ControllerBase
         "priceDesc" => query.OrderByDescending(p => p.Variants.FirstOrDefault()!.Price),
         "alphabeticalAsc" => query.OrderBy(p => p.Name),
         "alphabeticalDesc" => query.OrderByDescending(p => p.Name),
+        "newest" => query.OrderByDescending(p => p.CreatedAt),
+        "oldest" => query.OrderBy(p => p.CreatedAt),
         _ => query.OrderByDescending(p => p.CreatedAt),
       };
     }
@@ -131,7 +139,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
         using FileStream stream = new(fileDestinationPath, FileMode.Create);
         await file.CopyToAsync(stream);
 
-        string uploadedRelativePath = $"images/{uniqueFileName}";
+        string uploadedRelativePath = $"/images/{uniqueFileName}";
         uploadedPhotoUrls.Add(uploadedRelativePath);
       }
       catch (Exception e)

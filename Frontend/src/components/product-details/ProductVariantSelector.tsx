@@ -13,7 +13,7 @@ export default function ProductVariantSelector({ variants, selectedVariant, onSe
       {variants.map((variant, index) => (
         <Flex vertical align="center" key={variant.id} onClick={() => onSelectVariant(variant)}>
           <Image
-            src={variant.imageUrls[0]}
+            src={variant.photoUrls[0]}
             preview={false}
             width={60}
             className={`

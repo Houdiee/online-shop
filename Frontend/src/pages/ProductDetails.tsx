@@ -8,18 +8,41 @@ import ProductVariantSelector from "../components/product-details/ProductVariant
 import QuantitySelector from "../components/product-details/QuantitySelector";
 import type { Product, ProductVariant } from "../types/product";
 import axios from "axios";
+import { API_BASE_URL } from "../main";
+import { useParams } from "react-router-dom";
 
 export default function ProductDetails() {
-  const [quantity, setQuantity] = useState(1);
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(product.variants[0]);
   const [product, setProduct] = useState<Product | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [quantity, setQuantity] = useState(1);
+
+  const { id, variantId } = useParams<{ id: string; variantId?: string }>();
 
   useEffect(() => {
     const fetchProduct = async () => {
-      const respone = axios.get()
+      try {
+        const response = await axios.get(`${API_BASE_URL}/products/${id}`);
+        const fetchedProduct: Product = response.data;
+        setProduct(fetchedProduct);
+
+        let initialVariant: ProductVariant;
+        if (variantId) {
+          initialVariant = fetchedProduct.variants.find(v => v.id === Number(variantId)) || fetchedProduct.variants[0];
+        } else {
+          initialVariant = fetchedProduct.variants.find(v => v.id === 1) || fetchedProduct.variants[0];
+        }
+
+        setSelectedVariant(initialVariant);
+      } catch (error) {
+        console.error("Failed to fetch product:", error);
+      }
     };
     fetchProduct();
-  }, [product]);
+  }, [id, variantId]);
+
+  if (!product || !selectedVariant) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="px-4 py-8 md:px-8 lg:px-16 xl:px-24">
@@ -35,7 +58,7 @@ export default function ProductDetails() {
                 { title: selectedVariant.name },
               ]}
               />
-              <ProductImageCarousel imageUrls={selectedVariant.photoUrls} />
+              <ProductImageCarousel photoUrls={selectedVariant.photoUrls} />
             </Flex>
           </Col>
 

@@ -1,10 +1,10 @@
 import { Carousel, ConfigProvider, Image } from "antd";
 
 interface ProductImageCarouselProps {
-  imageUrls: string[];
+  photoUrls: string[];
 }
 
-export default function ProductImageCarousel({ imageUrls }: ProductImageCarouselProps) {
+export default function ProductImageCarousel({ photoUrls }: ProductImageCarouselProps) {
   return (
     <>
       <ConfigProvider
@@ -17,7 +17,7 @@ export default function ProductImageCarousel({ imageUrls }: ProductImageCarousel
           autoplay={true}
           className="w-full h-full"
         >
-          {imageUrls.map((src: string, index: number) => (
+          {photoUrls.map((src: string, index: number) => (
             <div key={index} className="h-full flex items-center justify-center">
               <Image
                 preview={false}
