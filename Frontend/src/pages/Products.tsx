@@ -29,19 +29,23 @@ export default function Products() {
         setProducts(fetchedProducts);
         setCategories(tagsResponse.data);
 
-        if (fetchedProducts.length > 0) {
-          const allPrices = fetchedProducts
-            .flatMap((p: Product) => p.variants)
-            .map((v: ProductVariant) => v.price)
-            .filter((price: number) => price !== undefined && price !== null);
+        fetchedProducts
+          .flatMap((p: Product) => p.variants)
+          .map((v: ProductVariant) => v.price)
+          .filter((price: number) => price !== undefined && price !== null);
 
-          const maxPriceValue = allPrices.length > 0 ? Math.max(...allPrices) : 500;
+        if (fetchedProducts.length > 0) {
+          const firstVariantPrices = fetchedProducts
+            .map((p: Product) => p.variants[0]?.price)
+            .filter((price: number | undefined): price is number => price !== undefined && price !== null);
+
+          const maxPriceValue = firstVariantPrices.length > 0 ? Math.max(...firstVariantPrices) : 500;
 
           setMaxPrice(maxPriceValue);
           setMaxPriceRange(maxPriceValue);
         }
-
-      } catch (error) {
+      }
+      catch (error) {
         console.error("Failed to fetch initial data:", error);
       }
     };
