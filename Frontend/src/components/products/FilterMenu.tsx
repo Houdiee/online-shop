@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Menu, type MenuProps } from "antd";
 import PriceRangeSelector from './PriceRangeSelector';
 import { tags } from '../../mock/tags';
@@ -7,25 +6,30 @@ type MenuItem = Required<MenuProps>['items'][number];
 
 interface FilterMenuProps {
   className: string;
+  selectedSortKey: string;
+  onSortChange: (key: string) => void;
+  minPrice: number;
+  maxPrice: number;
+  onPriceChange: (range: { min: number, max: number }) => void;
 };
 
-export default function FilterMenu({ className }: FilterMenuProps) {
-  // Change the initial state to the correct key
-  const [selectedFilterKey, setSelectedFilterKey] = useState<string>("sort-group-relevant");
-  const [minPrice, setMinPrice] = useState<number>(0);
-  const [maxPrice, setMaxPrice] = useState<number>(1000);
+export default function FilterMenu({
+  className,
+  selectedSortKey,
+  onSortChange,
+  minPrice,
+  maxPrice,
+  onPriceChange
+}: FilterMenuProps) {
 
   const handleMenuClick = (e: any) => {
-    if (e.key != "price-range-selector-item") {
-      setSelectedFilterKey(e.key);
-      console.log('Selected filter:', e.key);
-    };
+    if (e.key !== "price-range-selector-item") {
+      onSortChange(e.key);
+    }
   }
 
   const handlePriceRangeChange = (newMin: number, newMax: number) => {
-    setMinPrice(newMin);
-    setMaxPrice(newMax);
-    console.log('Price range changed:', newMin, newMax);
+    onPriceChange({ min: newMin, max: newMax });
   };
 
   const filterItems: MenuItem[] = [
@@ -86,7 +90,7 @@ export default function FilterMenu({ className }: FilterMenuProps) {
     <Menu
       mode="inline"
       items={filterItems}
-      selectedKeys={[selectedFilterKey]}
+      selectedKeys={[selectedSortKey]}
       onClick={handleMenuClick}
       defaultOpenKeys={["sort-group", "price-group"]}
       className={className}
