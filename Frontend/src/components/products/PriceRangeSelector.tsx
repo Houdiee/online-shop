@@ -53,7 +53,7 @@ export default function PriceRangeSelector({
           value={currentRange}
           onChange={handleSliderChange}
         />
-        <Flex justify="between" align="center" className="gap-2">
+        <Flex justify="center" align="center" className="gap-2">
           <InputNumber
             min={initialMinRange}
             max={currentRange[1]}
