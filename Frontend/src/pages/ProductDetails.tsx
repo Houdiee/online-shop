@@ -52,7 +52,7 @@ export default function ProductDetails() {
   return (
     <div className="px-4 py-8 md:px-8 lg:px-16 xl:px-24">
       <div className="max-w-screen-xl mx-auto">
-        <Row gutter={[24, 24]} justify="center" align="stretch">
+        <Row gutter={[64, 24]} justify="center" align="stretch">
 
           {/* Left side (aka image) */}
           <Col xs={24} md={24} lg={12} xl={12}>

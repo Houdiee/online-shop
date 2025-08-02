@@ -10,7 +10,8 @@ interface FilterMenuProps {
 };
 
 export default function FilterMenu({ className }: FilterMenuProps) {
-  const [selectedFilterKey, setSelectedFilterKey] = useState<string>("sort-group-1");
+  // Change the initial state to the correct key
+  const [selectedFilterKey, setSelectedFilterKey] = useState<string>("sort-group-relevant");
   const [minPrice, setMinPrice] = useState<number>(0);
   const [maxPrice, setMaxPrice] = useState<number>(1000);
 
@@ -33,15 +34,19 @@ export default function FilterMenu({ className }: FilterMenuProps) {
       label: "Sort By",
       children: [
         {
-          key: "sort-group-1",
+          key: "sort-group-relevant",
+          label: "Relevant",
+        },
+        {
+          key: "sort-group-low-to-high",
           label: "Price: Low to High",
         },
         {
-          key: "sort-group-2",
+          key: "sort-group-high-to-low",
           label: "Price: High to Low",
         },
         {
-          key: "sort-group-3",
+          key: "sort-group-newest",
           label: "Newest",
         },
       ]
@@ -81,11 +86,10 @@ export default function FilterMenu({ className }: FilterMenuProps) {
     <Menu
       mode="inline"
       items={filterItems}
-      className={className}
       selectedKeys={[selectedFilterKey]}
       onClick={handleMenuClick}
       defaultOpenKeys={["sort-group", "price-group"]}
+      className={className}
     />
   );
 }
-
