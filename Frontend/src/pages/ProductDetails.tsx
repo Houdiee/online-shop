@@ -60,7 +60,7 @@ export default function ProductDetails() {
               <Breadcrumb
                 items={[
                   { title: <Link to="/products">Products</Link>, },
-                  { title: <Link to={`/products/${product.id}/${product.variants[0].id}`}>{product.name}</Link>, },
+                  { title: product.name, },
                   { title: selectedVariant.name, },
                 ]}
               />
