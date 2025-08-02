@@ -4,17 +4,17 @@
   "variants": [
     {
       "name": "Original",
-      "price": 63.40,
+      "price": 13.40,
       "stockQuantity": 24
     },
     {
       "name": "White",
-      "price": 55.30,
+      "price": 15.30,
       "stockQuantity": 48
     },
     {
       "name": "Mango",
-      "price": 72.80,
+      "price": 12.80,
       "stockQuantity": 64
     }
   ]
