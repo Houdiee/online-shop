@@ -5,19 +5,21 @@ interface PriceRangeSelectorProps {
   min: number;
   max: number;
   onChange: (min: number, max: number) => void;
-  initialMinRange?: number;
-  initialMaxRange?: number;
+  minRange?: number;
+  maxRange?: number;
 }
 
 export default function PriceRangeSelector({
   min,
   max,
   onChange,
-  initialMinRange = 0,
-  initialMaxRange = 1000,
+  minRange = 0,
+  maxRange = 1000,
 }: PriceRangeSelectorProps) {
 
   const [currentRange, setCurrentRange] = useState<[number, number]>([min, max]);
+
+  const step = Math.ceil(maxRange / 100);
 
   useEffect(() => {
     setCurrentRange([min, max]);
@@ -29,14 +31,14 @@ export default function PriceRangeSelector({
   };
 
   const handleMinInputChange = (value: number | null) => {
-    const newMin = value === null ? initialMinRange : value;
+    const newMin = value === null ? minRange : value;
     const newRange: [number, number] = [newMin, currentRange[1]];
     setCurrentRange(newRange);
     onChange(newRange[0], newRange[1]);
   };
 
   const handleMaxInputChange = (value: number | null) => {
-    const newMax = value === null ? initialMaxRange : value;
+    const newMax = value === null ? maxRange : value;
     const newRange: [number, number] = [currentRange[0], newMax];
     setCurrentRange(newRange);
     onChange(newRange[0], newRange[1]);
@@ -47,15 +49,15 @@ export default function PriceRangeSelector({
       <div className="p-1">
         <Slider
           range
-          min={initialMinRange}
-          max={initialMaxRange}
-          step={10}
+          min={minRange}
+          max={maxRange}
+          step={step}
           value={currentRange}
           onChange={handleSliderChange}
         />
         <Flex justify="center" align="center" className="gap-2">
           <InputNumber
-            min={initialMinRange}
+            min={minRange}
             max={currentRange[1]}
             value={currentRange[0]}
             onChange={handleMinInputChange}
@@ -66,7 +68,7 @@ export default function PriceRangeSelector({
           <Typography.Text className="text-gray-600">-</Typography.Text>
           <InputNumber
             min={currentRange[0]}
-            max={initialMaxRange}
+            max={maxRange}
             value={currentRange[1]}
             onChange={handleMaxInputChange}
             className="w-24 rounded-md"

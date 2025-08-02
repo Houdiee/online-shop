@@ -14,6 +14,7 @@ export default function Products() {
   const [selectedSortKey, setSelectedSortKey] = useState<string>("sort-group-relevant");
   const [minPrice, setMinPrice] = useState<number>(0);
   const [maxPrice, setMaxPrice] = useState<number>(0);
+  const [maxPriceRange, setMaxPriceRange] = useState<number>(1000);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   useEffect(() => {
@@ -34,9 +35,10 @@ export default function Products() {
             .map((v: ProductVariant) => v.price)
             .filter((price: number) => price !== undefined && price !== null);
 
-          const maxPriceValue = allPrices.length > 0 ? Math.max(...allPrices) : 1000;
+          const maxPriceValue = allPrices.length > 0 ? Math.max(...allPrices) : 500;
 
           setMaxPrice(maxPriceValue);
+          setMaxPriceRange(maxPriceValue);
         }
 
       } catch (error) {
@@ -89,6 +91,7 @@ export default function Products() {
             tags={categories}
             selectedTags={selectedTags}
             onTagChange={setSelectedTags}
+            maxRange={maxPriceRange}
           />
         </Col>
 

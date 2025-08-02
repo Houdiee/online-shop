@@ -13,6 +13,7 @@ interface FilterMenuProps {
   tags: string[];
   selectedTags: string[];
   onTagChange: (tags: string[]) => void;
+  maxRange: number;
 };
 
 export default function FilterMenu({
@@ -24,7 +25,8 @@ export default function FilterMenu({
   onPriceChange,
   tags,
   selectedTags,
-  onTagChange
+  onTagChange,
+  maxRange
 }: FilterMenuProps) {
 
   const handleMenuClick = (e: any) => {
@@ -89,8 +91,8 @@ export default function FilterMenu({
               min={minPrice}
               max={maxPrice}
               onChange={handlePriceRangeChange}
-              initialMinRange={0}
-              initialMaxRange={1000}
+              minRange={0}
+              maxRange={maxRange}
             />
           ),
           style: { height: "auto" },
