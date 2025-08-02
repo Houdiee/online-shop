@@ -5,7 +5,11 @@ import { tags } from '../../mock/tags';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
-export default function FilterMenu() {
+interface FilterMenuProps {
+  className: string;
+};
+
+export default function FilterMenu({ className }: FilterMenuProps) {
   const [selectedFilterKey, setSelectedFilterKey] = useState<string>("sort-group-1");
   const [minPrice, setMinPrice] = useState<number>(0);
   const [maxPrice, setMaxPrice] = useState<number>(1000);
@@ -67,7 +71,7 @@ export default function FilterMenu() {
               initialMaxRange={1000}
             />
           ),
-          style: { width: '280px', overflow: 'visible', height: 'auto' }, // Increased width and allowed overflow
+          style: { height: "auto" },
         }
       ]
     }
@@ -77,7 +81,7 @@ export default function FilterMenu() {
     <Menu
       mode="inline"
       items={filterItems}
-      className="w-full bg-white rounded-lg font-inter"
+      className={className}
       selectedKeys={[selectedFilterKey]}
       onClick={handleMenuClick}
       defaultOpenKeys={["sort-group", "price-group"]}

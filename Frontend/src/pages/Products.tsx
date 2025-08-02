@@ -1,4 +1,4 @@
-import { Flex } from "antd";
+import { Col, Flex, Row } from "antd";
 import ProductCard from "../components/products/ProductCard";
 import { type Product } from "../types/product";
 import FilterMenu from "../components/products/FilterMenu";
@@ -21,14 +21,19 @@ export default function Products() {
 
   return (
     <>
-      <Flex>
-        <FilterMenu />
-        <Flex wrap gap={14} justify="center">
-          {products.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </Flex>
-      </Flex>
+      <Row gutter={[50, 50]}>
+        <Col xs={24} md={24} lg={12} xl={6}>
+          <FilterMenu className="bg-white rounded-lg font-inter" />
+        </Col>
+
+        <Col>
+          <Flex wrap gap={14} justify="center">
+            {products.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </Flex>
+        </Col>
+      </Row>
     </>
   )
 }
