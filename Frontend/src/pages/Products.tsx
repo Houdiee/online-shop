@@ -1,6 +1,6 @@
 import { Col, Flex, Row } from "antd";
 import ProductCard from "../components/products/ProductCard";
-import { type Product } from "../types/product";
+import { type Product, type ProductVariant } from "../types/product";
 import FilterMenu from "../components/products/FilterMenu";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -13,7 +13,7 @@ export default function Products() {
 
   const [selectedSortKey, setSelectedSortKey] = useState<string>("sort-group-relevant");
   const [minPrice, setMinPrice] = useState<number>(0);
-  const [maxPrice, setMaxPrice] = useState<number>(1000);
+  const [maxPrice, setMaxPrice] = useState<number>(0);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   useEffect(() => {
@@ -23,8 +23,22 @@ export default function Products() {
           axios.get(`${API_BASE_URL}/products`),
           axios.get(`${API_BASE_URL}/tags`)
         ]);
-        setProducts(productsResponse.data);
+
+        const fetchedProducts = productsResponse.data;
+        setProducts(fetchedProducts);
         setCategories(tagsResponse.data);
+
+        if (fetchedProducts.length > 0) {
+          const allPrices = fetchedProducts
+            .flatMap((p: Product) => p.variants)
+            .map((v: ProductVariant) => v.price)
+            .filter((price: number) => price !== undefined && price !== null);
+
+          const maxPriceValue = allPrices.length > 0 ? Math.max(...allPrices) : 1000;
+
+          setMaxPrice(maxPriceValue);
+        }
+
       } catch (error) {
         console.error("Failed to fetch initial data:", error);
       }
