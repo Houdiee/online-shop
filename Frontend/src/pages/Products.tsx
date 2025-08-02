@@ -9,18 +9,27 @@ import { API_BASE_URL } from "../main";
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
 
   const [selectedSortKey, setSelectedSortKey] = useState<string>("sort-group-relevant");
   const [minPrice, setMinPrice] = useState<number>(0);
   const [maxPrice, setMaxPrice] = useState<number>(1000);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      const response = await axios.get(`${API_BASE_URL}/products`);
-      const fetchedProducts: Product[] = response.data;
-      setProducts(fetchedProducts);
+    const fetchData = async () => {
+      try {
+        const [productsResponse, tagsResponse] = await Promise.all([
+          axios.get(`${API_BASE_URL}/products`),
+          axios.get(`${API_BASE_URL}/tags`)
+        ]);
+        setProducts(productsResponse.data);
+        setCategories(tagsResponse.data);
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+      }
     };
-    fetchProducts();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -31,17 +40,23 @@ export default function Products() {
       return firstVariantPrice >= minPrice && firstVariantPrice <= maxPrice;
     });
 
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(product =>
+        product.tags.some(tag => selectedTags.includes(tag))
+      );
+    }
+
     if (selectedSortKey === "sort-group-low-to-high") {
-      filtered.sort((a, b) => a.variants[0].price - b.variants[0].price);
+      filtered.sort((a, b) => (a.variants[0]?.price || 0) - (b.variants[0]?.price || 0));
     } else if (selectedSortKey === "sort-group-high-to-low") {
-      filtered.sort((a, b) => b.variants[0].price - a.variants[0].price);
+      filtered.sort((a, b) => (b.variants[0]?.price || 0) - (a.variants[0]?.price || 0));
     } else if (selectedSortKey === "sort-group-newest") {
       filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
     setDisplayedProducts(filtered);
 
-  }, [products, selectedSortKey, minPrice, maxPrice]);
+  }, [products, selectedSortKey, minPrice, maxPrice, selectedTags]);
 
   return (
     <>
@@ -57,6 +72,9 @@ export default function Products() {
               setMinPrice(min);
               setMaxPrice(max);
             }}
+            tags={categories}
+            selectedTags={selectedTags}
+            onTagChange={setSelectedTags}
           />
         </Col>
 
@@ -71,3 +89,4 @@ export default function Products() {
     </>
   );
 }
+

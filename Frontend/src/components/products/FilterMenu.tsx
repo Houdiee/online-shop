@@ -1,6 +1,5 @@
 import { Menu, type MenuProps } from "antd";
 import PriceRangeSelector from './PriceRangeSelector';
-import { tags } from '../../mock/tags';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -10,7 +9,10 @@ interface FilterMenuProps {
   onSortChange: (key: string) => void;
   minPrice: number;
   maxPrice: number;
-  onPriceChange: (range: { min: number, max: number }) => void;
+  onPriceChange: (range: { min: number; max: number; }) => void;
+  tags: string[];
+  selectedTags: string[];
+  onTagChange: (tags: string[]) => void;
 };
 
 export default function FilterMenu({
@@ -19,11 +21,20 @@ export default function FilterMenu({
   onSortChange,
   minPrice,
   maxPrice,
-  onPriceChange
+  onPriceChange,
+  tags,
+  selectedTags,
+  onTagChange
 }: FilterMenuProps) {
 
   const handleMenuClick = (e: any) => {
-    if (e.key !== "price-range-selector-item") {
+    if (e.key.startsWith("category-group-")) {
+      const tag = e.key.replace("category-group-", "");
+      const newSelectedTags = selectedTags.includes(tag)
+        ? selectedTags.filter(t => t !== tag)
+        : [...selectedTags, tag];
+      onTagChange(newSelectedTags);
+    } else if (e.key !== "price-range-selector-item") {
       onSortChange(e.key);
     }
   }
@@ -31,6 +42,8 @@ export default function FilterMenu({
   const handlePriceRangeChange = (newMin: number, newMax: number) => {
     onPriceChange({ min: newMin, max: newMax });
   };
+
+  const allSelectedKeys = [selectedSortKey, ...selectedTags.map(tag => `category-group-${tag}`)];
 
   const filterItems: MenuItem[] = [
     {
@@ -58,9 +71,9 @@ export default function FilterMenu({
     {
       key: "category-group",
       label: "Category",
-      children: tags.map((tag, index) => (
+      children: tags.map(tag => (
         {
-          key: `category-group-${index}`,
+          key: `category-group-${tag}`,
           label: tag,
         }
       )),
@@ -90,10 +103,11 @@ export default function FilterMenu({
     <Menu
       mode="inline"
       items={filterItems}
-      selectedKeys={[selectedSortKey]}
+      selectedKeys={allSelectedKeys}
       onClick={handleMenuClick}
       defaultOpenKeys={["sort-group", "price-group"]}
       className={className}
     />
   );
 }
+

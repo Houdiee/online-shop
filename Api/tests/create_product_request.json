@@ -1,20 +1,20 @@
 {
   "name": "Monster 24 Pack",
-  "tags": ["food","consumable","energy"],
+  "tags": ["balls","more balls"],
   "variants": [
     {
       "name": "Original",
-      "price": 13.40,
+      "price": 43.40,
       "stockQuantity": 24
     },
     {
       "name": "White",
-      "price": 15.30,
+      "price": 45.30,
       "stockQuantity": 48
     },
     {
       "name": "Mango",
-      "price": 12.80,
+      "price": 42.80,
       "stockQuantity": 64
     }
   ]
