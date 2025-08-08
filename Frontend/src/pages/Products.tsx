@@ -5,6 +5,7 @@ import FilterMenu from "../components/products/FilterMenu";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../main";
+import Navbar from "../components/Navbar";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -80,33 +81,37 @@ export default function Products() {
 
   return (
     <>
-      <Row gutter={[50, 50]}>
-        <Col xs={24} md={8} lg={7} xl={6}>
-          <FilterMenu
-            className="bg-white rounded-lg font-inter h-full"
-            selectedSortKey={selectedSortKey}
-            onSortChange={setSelectedSortKey}
-            minPrice={minPrice}
-            maxPrice={maxPrice}
-            onPriceChange={({ min, max }) => {
-              setMinPrice(min);
-              setMaxPrice(max);
-            }}
-            tags={categories}
-            selectedTags={selectedTags}
-            onTagChange={setSelectedTags}
-            maxRange={maxPriceRange}
-          />
-        </Col>
+      <Flex vertical>
+        <Navbar />
+        <Row gutter={[50, 50]}>
+          <Col xs={24} md={8} lg={7} xl={6}>
+            <FilterMenu
+              className="bg-white rounded-lg font-inter h-full"
+              selectedSortKey={selectedSortKey}
+              onSortChange={setSelectedSortKey}
+              minPrice={minPrice}
+              maxPrice={maxPrice}
+              onPriceChange={({ min, max }) => {
+                setMinPrice(min);
+                setMaxPrice(max);
+              }}
+              tags={categories}
+              selectedTags={selectedTags}
+              onTagChange={setSelectedTags}
+              maxRange={maxPriceRange}
+            />
+          </Col>
 
-        <Col xs={24} md={16} lg={17} xl={18}>
-          <Flex wrap gap={14}>
-            {displayedProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </Flex>
-        </Col>
-      </Row>
+          <Col xs={24} md={16} lg={17} xl={18}>
+            <Flex wrap gap={14}>
+              {displayedProducts.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </Flex>
+          </Col>
+        </Row>
+
+      </Flex>
     </>
   );
 }
