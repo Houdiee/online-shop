@@ -10,6 +10,7 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const defaultVariant = product.variants[0];
   const defaultImage = `${API_BASE_URL}/${defaultVariant.photoUrls[0]}`;
+  const productVariantCount = product.variants.length;
 
   return (
     <Link to={`${product.id}/${product.variants[0].id}`}>
@@ -26,7 +27,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
           <Flex vertical>
             <Typography.Text strong className="!text-md">{product.name}</Typography.Text>
-            <Typography.Text type="secondary">{defaultVariant.name}</Typography.Text>
+            <Typography.Text type="secondary">{productVariantCount} options</Typography.Text>
             <Typography.Text className="!text-md">${defaultVariant.price}</Typography.Text>
           </Flex>
         </Flex>
