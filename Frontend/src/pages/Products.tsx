@@ -1,4 +1,4 @@
-import { Col, Flex, Row } from "antd";
+import { Col, Flex, Layout, Row } from "antd";
 import ProductCard from "../components/products/ProductCard";
 import { type Product, type ProductVariant } from "../types/product";
 import FilterMenu from "../components/products/FilterMenu";
@@ -80,9 +80,9 @@ export default function Products() {
   }, [products, selectedSortKey, minPrice, maxPrice, selectedTags]);
 
   return (
-    <>
+    <Layout>
+      <Navbar />
       <Flex vertical>
-        <Navbar />
         <Row gutter={[50, 50]}>
           <Col xs={24} md={8} lg={7} xl={6}>
             <FilterMenu
@@ -112,7 +112,7 @@ export default function Products() {
         </Row>
 
       </Flex>
-    </>
+    </Layout>
   );
 }
 

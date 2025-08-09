@@ -1,10 +1,17 @@
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import { Button } from "antd";
 import { type AddShoppingCartItemRequest } from "../../types/shopping-cart";
+import axios from "axios";
+import { API_BASE_URL, user } from "../../main";
 
 export default function AddToCartButton({ productVariantId, quantity }: AddShoppingCartItemRequest) {
-  const handleAddToCart = () => {
-    console.log({ productVariantId, quantity });
+  const handleAddToCart = async () => {
+    const response = await axios.post(`${API_BASE_URL}/users/${user.id}/shoppingcart`, {
+      productVariantId,
+      quantity,
+    });
+    user.shoppingCart = response.data;
+    console.log(user);
   };
 
   return (
