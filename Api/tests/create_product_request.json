@@ -1,19 +1,19 @@
 {
-  "name": "Monster 24 Pack",
-  "tags": ["balls","more balls"],
+  "name": "T-shirt",
+  "tags": ["more tags","blah blah"],
   "variants": [
     {
-      "name": "Original",
+      "name": "S",
       "price": 43.40,
       "stockQuantity": 24
     },
     {
-      "name": "White",
+      "name": "M",
       "price": 45.30,
       "stockQuantity": 48
     },
     {
-      "name": "Mango",
+      "name": "L",
       "price": 42.80,
       "stockQuantity": 64
     }

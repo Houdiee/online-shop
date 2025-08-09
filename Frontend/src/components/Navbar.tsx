@@ -4,6 +4,7 @@ import axios from "axios";
 import { API_BASE_URL } from "../main";
 import { Header } from "antd/es/layout/layout";
 import { AutoComplete, Input, Menu } from "antd";
+import { UserOutlined } from "@ant-design/icons";
 
 export default function Navbar() {
   const [options, setOptions] = useState<{ value: string }[]>([]);
@@ -59,7 +60,7 @@ export default function Navbar() {
         mode="horizontal"
         className="flex-1 min-w-0 border-b-0 !p-0 !h-auto justify-end"
       >
-        <Menu.Item key="3">Login / Signup</Menu.Item>
+        <Menu.Item key="3"><UserOutlined /> Account</Menu.Item>
       </Menu>
     </Header>
   );
