@@ -3,35 +3,63 @@ import type { Product } from "../types/product";
 import axios from "axios";
 import { API_BASE_URL } from "../main";
 import { Header } from "antd/es/layout/layout";
-import { AutoComplete, Input, Menu } from "antd";
+import { AutoComplete, Flex, Input, Menu, Space, Typography } from "antd";
 import { UserOutlined } from "@ant-design/icons";
+import { Link } from "react-router-dom";
+import Fuse from "fuse.js";
 
 export default function Navbar() {
   const [options, setOptions] = useState<{ value: string }[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const MIN_SEARCH_CHARS = 1;
+
+  const createDropdownItem = (product: Product) => {
+    return (
+      <Link to={`/products/${product.id}/${product.variants[0].id}`}>
+        <Flex justify="space-between" align="center" className="w-full">
+          <Space direction="horizontal" size="large">
+            <img
+              src={`${API_BASE_URL}/${product.variants[0].photoUrls[0]}`}
+              className="w-20 object-cover"
+            />
+            <Typography.Text>{product.name}</Typography.Text>
+          </Space>
+          <Typography.Text type="secondary" className="justify-self-end">{product.variants.length} options</Typography.Text>
+        </Flex >
+      </Link>
+    );
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
       const response = await axios.get(`${API_BASE_URL}/products`);
       const data: Product[] = await response.data;
-
       setProducts(data);
-      setOptions(data.map((product) => ({ value: product.name })));
     };
 
     fetchProducts();
   }, []);
 
   const handleSearch = (value: string) => {
-    if (!value) {
-      setOptions(products.map((product) => ({ value: product.name })));
-    } else {
-      const filteredOptions = products
-        .filter((product) =>
-          product.name.toLowerCase().includes(value.toLowerCase())
-        )
-        .map((product) => ({ value: product.name }));
+    if (value.length >= MIN_SEARCH_CHARS) {
+      const options = {
+        keys: ['name'],
+        threshold: 0.3,
+        includeScore: true,
+      };
+
+      const fuse = new Fuse(products, options);
+      const result = fuse.search(value);
+
+      const filteredOptions = result.map(({ item }) => ({
+        key: item.id,
+        value: item.name,
+        label: createDropdownItem(item),
+      }));
+
       setOptions(filteredOptions);
+    } else {
+      setOptions([]);
     }
   };
 
@@ -65,3 +93,4 @@ export default function Navbar() {
     </Header>
   );
 }
+
