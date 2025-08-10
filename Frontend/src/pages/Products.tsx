@@ -89,18 +89,30 @@ export default function Products() {
   }, [products, selectedSortKey, minPrice, maxPrice, selectedTags]);
 
   useEffect(() => {
-    const params = new URLSearchParams();
-    params.set("sort", selectedSortKey);
-    params.set("minPrice", minPrice.toString());
-    selectedTags.forEach(tag => params.append("tags", tag));
-    setSearchParams(params);
-  }, [selectedSortKey, minPrice, selectedTags, setSearchParams]);
+    const params = new URLSearchParams(searchParams);
+    if (selectedSortKey) {
+      params.set("sort", selectedSortKey);
+    } else {
+      params.delete("sort");
+    }
 
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("maxPrice", maxPrice.toString());
-    setSearchParams(params);
-  }, [maxPrice, searchParams, setSearchParams]);
+    if (minPrice > 0) {
+      params.set("minPrice", minPrice.toString());
+    } else {
+      params.delete("minPrice");
+    }
+
+    if (maxPrice > 0) {
+      params.set("maxPrice", maxPrice.toString());
+    } else {
+      params.delete("maxPrice");
+    }
+
+    params.delete("tags");
+    selectedTags.forEach(tag => params.append("tags", tag));
+
+    setSearchParams(params, { replace: true });
+  }, [selectedSortKey, minPrice, maxPrice, selectedTags, setSearchParams, searchParams]);
 
   return (
     <Layout>
@@ -133,9 +145,7 @@ export default function Products() {
             </Flex>
           </Col>
         </Row>
-
       </Flex>
     </Layout>
   );
 }
-
