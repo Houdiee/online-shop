@@ -83,8 +83,8 @@ export default function Products() {
     <Layout>
       <Navbar />
       <Flex vertical>
-        <Row gutter={[50, 50]}>
-          <Col xs={24} md={8} lg={7} xl={6}>
+        <Row gutter={[15, 15]}>
+          <Col xs={24} md={7} lg={7} xl={5}>
             <FilterMenu
               className="bg-white rounded-lg font-inter h-full"
               selectedSortKey={selectedSortKey}
@@ -102,8 +102,8 @@ export default function Products() {
             />
           </Col>
 
-          <Col xs={24} md={16} lg={17} xl={18}>
-            <Flex wrap gap={14}>
+          <Col xs={24} md={17} lg={17} xl={19}>
+            <Flex wrap gap={9} className="!w-full">
               {displayedProducts.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
