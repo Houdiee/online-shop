@@ -54,7 +54,7 @@ export default function ProductDetails() {
   return (
     <Layout>
       <Navbar />
-      <Content>
+      <Content className="!bg-white">
 
         <div className="px-4 py-8 md:px-8 lg:px-16 xl:px-24">
           <div className="max-w-screen-xl mx-auto">

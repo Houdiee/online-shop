@@ -5,13 +5,17 @@ import { API_BASE_URL } from "../main";
 import { Header } from "antd/es/layout/layout";
 import { AutoComplete, Flex, Input, Menu, Space, Typography } from "antd";
 import { ShoppingCartOutlined, UserOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
 import Fuse from "fuse.js";
 
 export default function Navbar() {
+  const [searchValue, setSearchValue] = useState<string>("");
   const [options, setOptions] = useState<{ value: string }[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const MIN_SEARCH_CHARS = 1;
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const createDropdownItem = (product: Product) => {
     return (
@@ -21,6 +25,9 @@ export default function Navbar() {
             <img
               src={`${API_BASE_URL}/${product.variants[0].photoUrls[0]}`}
               className="w-20 object-cover"
+              onError={(e) => {
+                e.currentTarget.src = `https://placehold.co/80x80/cccccc/333333?text=No+Image`;
+              }}
             />
             <Typography.Text>{product.name}</Typography.Text>
           </Space>
@@ -32,16 +39,33 @@ export default function Navbar() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const response = await axios.get(`${API_BASE_URL}/products`);
-      const data: Product[] = await response.data;
-      setProducts(data);
+      try {
+        const response = await axios.get(`${API_BASE_URL}/products`);
+        const data: Product[] = response.data;
+        setProducts(data);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
     };
 
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const urlSearchValue = params.get("search");
+
+    if (urlSearchValue !== null && urlSearchValue !== searchValue) {
+      setSearchValue(urlSearchValue);
+      handleSearch(urlSearchValue);
+    } else if (urlSearchValue === null && searchValue !== "") {
+      setSearchValue("");
+      setOptions([]);
+    }
+  }, [location.search, products]);
+
   const handleSearch = (value: string) => {
-    if (value.length >= MIN_SEARCH_CHARS) {
+    if (value.length >= MIN_SEARCH_CHARS && products.length > 0) {
       const options = {
         keys: ['name'],
         threshold: 0.3,
@@ -59,6 +83,14 @@ export default function Navbar() {
 
       setOptions(filteredOptions);
     } else {
+      setOptions([]);
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      const newSearchParam = searchValue ? `?search=${searchValue}` : '';
+      navigate({ search: newSearchParam });
       setOptions([]);
     }
   };
@@ -85,8 +117,11 @@ export default function Navbar() {
         <AutoComplete
           className="w-full"
           options={options}
+          value={searchValue}
           onSearch={handleSearch}
+          onChange={(value) => setSearchValue(value)}
           placeholder="Search"
+          onKeyDown={handleKeyDown}
         >
           <Input.Search />
         </AutoComplete>

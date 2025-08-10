@@ -1,6 +1,6 @@
-import { Col, Flex, Layout, Row, Space } from "antd";
+import { Col, Flex, Layout, Row, Space, Typography } from "antd";
 import ProductCard from "../components/products/ProductCard";
-import { type Product, type ProductVariant } from "../types/product";
+import { type Product } from "../types/product";
 import FilterMenu from "../components/products/FilterMenu";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -8,6 +8,7 @@ import { API_BASE_URL } from "../main";
 import Navbar from "../components/Navbar";
 import { useSearchParams } from "react-router-dom";
 import { Content } from "antd/es/layout/layout";
+import Fuse from "fuse.js";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -20,6 +21,7 @@ export default function Products() {
   const [maxPrice, setMaxPrice] = useState<number>(Number(searchParams.get("maxPrice")) || 0);
   const [maxPriceRange, setMaxPriceRange] = useState<number>(1000);
   const [selectedTags, setSelectedTags] = useState<string[]>(searchParams.getAll("tags") || []);
+  const [searchValue, setSearchValue] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,11 +34,6 @@ export default function Products() {
         const fetchedProducts = productsResponse.data;
         setProducts(fetchedProducts);
         setCategories(tagsResponse.data);
-
-        fetchedProducts
-          .flatMap((p: Product) => p.variants)
-          .map((v: ProductVariant) => v.price)
-          .filter((price: number) => price !== undefined && price !== null);
 
         if (fetchedProducts.length > 0) {
           const firstVariantPrices = fetchedProducts
@@ -61,6 +58,18 @@ export default function Products() {
   useEffect(() => {
     let filtered = products;
 
+    const urlSearchValue = searchParams.get("search");
+
+    if (urlSearchValue) {
+      setSearchValue(urlSearchValue);
+      const options = { keys: ['name'], threshold: 0.3 };
+      const fuse = new Fuse(products, options);
+      const result = fuse.search(urlSearchValue);
+      filtered = result.map(({ item }) => item);
+    } else {
+      setSearchValue("");
+    }
+
     filtered = filtered.filter(product => {
       const firstVariantPrice = product.variants[0]?.price || 0;
       return firstVariantPrice >= minPrice && firstVariantPrice <= maxPrice;
@@ -80,18 +89,14 @@ export default function Products() {
       filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
-    const newMaxPrice = Math.max(...filtered.map(p => p.variants[0]?.price || 0));
-    if (maxPrice === 0 || newMaxPrice > maxPrice) {
-      setMaxPrice(newMaxPrice);
-    }
-
     setDisplayedProducts(filtered);
 
-  }, [products, selectedSortKey, minPrice, maxPrice, selectedTags]);
+  }, [products, selectedSortKey, minPrice, maxPrice, selectedTags, searchParams]);
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
-    if (selectedSortKey) {
+
+    if (selectedSortKey && selectedSortKey !== "sort-group-relevant") {
       params.set("sort", selectedSortKey);
     } else {
       params.delete("sort");
@@ -142,6 +147,11 @@ export default function Products() {
               </Col>
 
               <Col xs={24} md={17} lg={17} xl={19}>
+                {searchValue && (
+                  <Typography.Title level={3}>
+                    {`Showing results for "${searchValue}"`}
+                  </Typography.Title>
+                )}
                 <Flex wrap gap={9} className="!w-full">
                   {displayedProducts.map(product => (
                     <ProductCard key={product.id} product={product} />
@@ -156,3 +166,4 @@ export default function Products() {
     </Layout>
   );
 }
+
