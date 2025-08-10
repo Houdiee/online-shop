@@ -1,4 +1,4 @@
-import { Col, Flex, Layout, Row } from "antd";
+import { Col, Flex, Layout, Row, Space } from "antd";
 import ProductCard from "../components/products/ProductCard";
 import { type Product, type ProductVariant } from "../types/product";
 import FilterMenu from "../components/products/FilterMenu";
@@ -7,6 +7,7 @@ import axios from "axios";
 import { API_BASE_URL } from "../main";
 import Navbar from "../components/Navbar";
 import { useSearchParams } from "react-router-dom";
+import { Content } from "antd/es/layout/layout";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -116,36 +117,42 @@ export default function Products() {
 
   return (
     <Layout>
-      <Navbar />
-      <Flex vertical>
-        <Row gutter={[15, 15]}>
-          <Col xs={24} md={7} lg={7} xl={5}>
-            <FilterMenu
-              className="bg-white rounded-lg font-inter h-full"
-              selectedSortKey={selectedSortKey}
-              onSortChange={setSelectedSortKey}
-              minPrice={minPrice}
-              maxPrice={maxPrice}
-              onPriceChange={({ min, max }) => {
-                setMinPrice(min);
-                setMaxPrice(max);
-              }}
-              tags={categories}
-              selectedTags={selectedTags}
-              onTagChange={setSelectedTags}
-              maxRange={maxPriceRange}
-            />
-          </Col>
+      <Space direction="vertical" size="large">
+        <Navbar />
 
-          <Col xs={24} md={17} lg={17} xl={19}>
-            <Flex wrap gap={9} className="!w-full">
-              {displayedProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </Flex>
-          </Col>
-        </Row>
-      </Flex>
+        <Content>
+          <Flex vertical>
+            <Row gutter={[15, 15]}>
+              <Col xs={24} md={7} lg={7} xl={5}>
+                <FilterMenu
+                  className="bg-white rounded-lg font-inter h-full"
+                  selectedSortKey={selectedSortKey}
+                  onSortChange={setSelectedSortKey}
+                  minPrice={minPrice}
+                  maxPrice={maxPrice}
+                  onPriceChange={({ min, max }) => {
+                    setMinPrice(min);
+                    setMaxPrice(max);
+                  }}
+                  tags={categories}
+                  selectedTags={selectedTags}
+                  onTagChange={setSelectedTags}
+                  maxRange={maxPriceRange}
+                />
+              </Col>
+
+              <Col xs={24} md={17} lg={17} xl={19}>
+                <Flex wrap gap={9} className="!w-full">
+                  {displayedProducts.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </Flex>
+              </Col>
+            </Row>
+          </Flex>
+        </Content>
+
+      </Space>
     </Layout>
   );
 }

@@ -4,7 +4,7 @@ import axios from "axios";
 import { API_BASE_URL } from "../main";
 import { Header } from "antd/es/layout/layout";
 import { AutoComplete, Flex, Input, Menu, Space, Typography } from "antd";
-import { UserOutlined } from "@ant-design/icons";
+import { ShoppingCartOutlined, UserOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import Fuse from "fuse.js";
 
@@ -96,7 +96,12 @@ export default function Navbar() {
         mode="horizontal"
         className="flex-1 min-w-0 border-b-0 !p-0 !h-auto justify-end"
       >
-        <Menu.Item key="3"><UserOutlined /> Account</Menu.Item>
+        <Menu.Item key="3">
+          <UserOutlined /> Account
+        </Menu.Item>
+        <Menu.Item key="4">
+          <ShoppingCartOutlined /> Cart
+        </Menu.Item>
       </Menu>
     </Header>
   );

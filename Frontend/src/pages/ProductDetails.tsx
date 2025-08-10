@@ -1,4 +1,4 @@
-import { Breadcrumb, Col, Divider, Flex, Row, Space } from "antd";
+import { Breadcrumb, Col, Divider, Flex, Layout, Row, Space } from "antd";
 import { useEffect, useState } from "react";
 import ProductImageCarousel from "../components/product-details/ProductImageCarousel";
 import AddToCartButton from "../components/product-details/AddToCartButton";
@@ -10,6 +10,8 @@ import type { Product, ProductVariant } from "../types/product";
 import axios from "axios";
 import { API_BASE_URL } from "../main";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import { Content } from "antd/es/layout/layout";
 
 export default function ProductDetails() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -50,45 +52,51 @@ export default function ProductDetails() {
   }
 
   return (
-    <div className="px-4 py-8 md:px-8 lg:px-16 xl:px-24">
-      <div className="max-w-screen-xl mx-auto">
-        <Row gutter={[64, 24]} justify="center" align="stretch">
+    <Layout>
+      <Navbar />
+      <Content>
 
-          {/* Left side (aka image) */}
-          <Col xs={24} md={24} lg={12} xl={12}>
-            <Flex vertical className="h-full">
-              <Breadcrumb
-                items={[
-                  { title: <Link to="/products">Products</Link>, },
-                  { title: product.name, },
-                  { title: selectedVariant.name, },
-                ]}
-              />
-              <ProductImageCarousel photoUrls={selectedVariant.photoUrls} />
-            </Flex>
-          </Col>
+        <div className="px-4 py-8 md:px-8 lg:px-16 xl:px-24">
+          <div className="max-w-screen-xl mx-auto">
+            <Row gutter={[64, 24]} justify="center" align="stretch">
 
-          {/* Right side (aka title, description, variant, etc.) */}
-          <Col xs={24} md={24} lg={12} xl={12}>
-            <Flex vertical gap={10} className="h-full">
-              <ProductInfo name={product.name} price={selectedVariant.price.toFixed()} tags={product.tags} />
+              {/* Left side (aka image) */}
+              <Col xs={24} md={24} lg={12} xl={12}>
+                <Flex vertical className="h-full">
+                  <Breadcrumb
+                    items={[
+                      { title: <Link to="/products">Products</Link>, },
+                      { title: product.name, },
+                      { title: selectedVariant.name, },
+                    ]}
+                  />
+                  <ProductImageCarousel photoUrls={selectedVariant.photoUrls} />
+                </Flex>
+              </Col>
 
-              <Divider className="!mb-0" />
+              {/* Right side (aka title, description, variant, etc.) */}
+              <Col xs={24} md={24} lg={12} xl={12}>
+                <Flex vertical gap={10} className="h-full">
+                  <ProductInfo name={product.name} price={selectedVariant.price.toFixed()} tags={product.tags} />
 
-              <Space direction="vertical" size="large" className="w-full">
-                <ProductVariantSelector variants={product.variants} selectedVariant={selectedVariant} onSelectVariant={handleVariantSelect} />
-                <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} />
-              </Space>
+                  <Divider className="!mb-0" />
 
-              <Flex>
-                <ProductDescription description={product.description} />
-              </Flex>
+                  <Space direction="vertical" size="large" className="w-full">
+                    <ProductVariantSelector variants={product.variants} selectedVariant={selectedVariant} onSelectVariant={handleVariantSelect} />
+                    <QuantitySelector quantity={quantity} onQuantityChange={setQuantity} />
+                  </Space>
 
-              <AddToCartButton productVariantId={selectedVariant.id} quantity={quantity} />
-            </Flex>
-          </Col>
-        </Row >
-      </div>
-    </div>
+                  <Flex>
+                    <ProductDescription description={product.description} />
+                  </Flex>
+
+                  <AddToCartButton productVariantId={selectedVariant.id} quantity={quantity} />
+                </Flex>
+              </Col>
+            </Row >
+          </div>
+        </div>
+      </Content>
+    </Layout>
   );
 }
