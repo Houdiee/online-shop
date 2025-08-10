@@ -6,17 +6,19 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../main";
 import Navbar from "../components/Navbar";
+import { useSearchParams } from "react-router-dom";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [selectedSortKey, setSelectedSortKey] = useState<string>("sort-group-relevant");
-  const [minPrice, setMinPrice] = useState<number>(0);
-  const [maxPrice, setMaxPrice] = useState<number>(0);
+  const [selectedSortKey, setSelectedSortKey] = useState<string>(searchParams.get("sort") || "sort-group-relevant");
+  const [minPrice, setMinPrice] = useState<number>(Number(searchParams.get("minPrice")) || 0);
+  const [maxPrice, setMaxPrice] = useState<number>(Number(searchParams.get("maxPrice")) || 0);
   const [maxPriceRange, setMaxPriceRange] = useState<number>(1000);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>(searchParams.getAll("tags") || []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,12 +44,14 @@ export default function Products() {
 
           const maxPriceValue = firstVariantPrices.length > 0 ? Math.max(...firstVariantPrices) : 500;
 
-          setMaxPrice(maxPriceValue);
+          if (maxPrice === 0) {
+            setMaxPrice(maxPriceValue);
+          }
           setMaxPriceRange(maxPriceValue);
         }
       }
       catch (error) {
-        console.error("Failed to fetch initial data:", error);
+        console.log("Failed to fetch initial data:", error);
       }
     };
     fetchData();
@@ -75,9 +79,28 @@ export default function Products() {
       filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
+    const newMaxPrice = Math.max(...filtered.map(p => p.variants[0]?.price || 0));
+    if (maxPrice === 0 || newMaxPrice > maxPrice) {
+      setMaxPrice(newMaxPrice);
+    }
+
     setDisplayedProducts(filtered);
 
   }, [products, selectedSortKey, minPrice, maxPrice, selectedTags]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set("sort", selectedSortKey);
+    params.set("minPrice", minPrice.toString());
+    selectedTags.forEach(tag => params.append("tags", tag));
+    setSearchParams(params);
+  }, [selectedSortKey, minPrice, selectedTags, setSearchParams]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("maxPrice", maxPrice.toString());
+    setSearchParams(params);
+  }, [maxPrice, searchParams, setSearchParams]);
 
   return (
     <Layout>

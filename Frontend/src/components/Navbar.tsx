@@ -69,8 +69,16 @@ export default function Navbar() {
         mode="horizontal"
         className="flex-1 min-w-0 border-b-0 !p-0 !h-auto"
       >
-        <Menu.Item key="1">Home</Menu.Item>
-        <Menu.Item key="2">Latest</Menu.Item>
+        <Menu.Item key="1">
+          <Link to="/">
+            Home
+          </Link>
+        </Menu.Item>
+        <Menu.Item key="2">
+          <Link to="/products?sort=sort-group-newest">
+            Latest
+          </Link>
+        </Menu.Item>
       </Menu>
 
       <div className="flex-none w-1/2 flex justify-center">
