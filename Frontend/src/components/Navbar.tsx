@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import type { Product } from "../types/product";
 import axios from "axios";
-import { API_BASE_URL } from "../main";
 import { Header } from "antd/es/layout/layout";
-import { AutoComplete, Flex, Input, Menu, Space, Typography } from "antd";
-import { ShoppingCartOutlined, UserOutlined } from "@ant-design/icons";
+import { AutoComplete, Flex, Input, Menu, Space, Typography, Button } from "antd";
+import { ShoppingCartOutlined, UserOutlined, CloseOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
 import Fuse from "fuse.js";
+import { API_BASE_URL } from "../main";
+
 
 export default function Navbar() {
   const [searchValue, setSearchValue] = useState<string>("");
   const [options, setOptions] = useState<{ value: string }[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const MIN_SEARCH_CHARS = 1;
 
   const location = useLocation();
@@ -95,50 +97,86 @@ export default function Navbar() {
     }
   };
 
+  const handleOpenSidebar = () => {
+    setIsSidebarOpen(true);
+  };
+
+  const handleCloseSidebar = () => {
+    setIsSidebarOpen(false);
+  };
+
   return (
-    <Header className="!bg-white flex items-center justify-between px-4">
-      <Menu
-        mode="horizontal"
-        className="flex-1 min-w-0 border-b-0 !p-0 !h-auto"
-      >
-        <Menu.Item key="1">
-          <Link to="/">
-            Home
-          </Link>
-        </Menu.Item>
-        <Menu.Item key="2">
-          <Link to="/products?sort=sort-group-newest">
-            Latest
-          </Link>
-        </Menu.Item>
-      </Menu>
-
-      <div className="flex-none w-1/2 flex justify-center">
-        <AutoComplete
-          className="w-full"
-          options={options}
-          value={searchValue}
-          onSearch={handleSearch}
-          onChange={(value) => setSearchValue(value)}
-          placeholder="Search"
-          onKeyDown={handleKeyDown}
+    <>
+      <Header className="!bg-white flex items-center justify-between px-4">
+        {/* Left-aligned menu */}
+        <Menu
+          mode="horizontal"
+          className="flex-1 min-w-0 border-b-0 !p-0 !h-auto"
         >
-          <Input.Search />
-        </AutoComplete>
-      </div>
+          <Menu.Item key="1">
+            <Link to="/">Home</Link>
+          </Menu.Item>
+          <Menu.Item key="2">
+            <Link to="/products?sort=sort-group-newest">Latest</Link>
+          </Menu.Item>
+        </Menu>
 
-      <Menu
-        mode="horizontal"
-        className="flex-1 min-w-0 border-b-0 !p-0 !h-auto justify-end"
+        {/* Center-aligned search bar */}
+        <div className="flex-none w-1/2 flex justify-center">
+          <AutoComplete
+            className="w-full"
+            options={options}
+            value={searchValue}
+            onSearch={handleSearch}
+            onChange={(value) => setSearchValue(value)}
+            placeholder="Search"
+            onKeyDown={handleKeyDown}
+          >
+            <Input.Search />
+          </AutoComplete>
+        </div>
+
+        {/* Right-aligned menu with cart icon */}
+        <Menu
+          mode="horizontal"
+          className="flex-1 min-w-0 border-b-0 !p-0 !h-auto justify-end"
+        >
+          <Menu.Item key="3">
+            <UserOutlined /> Account
+          </Menu.Item>
+          <Menu.Item key="4" onClick={handleOpenSidebar}>
+            <ShoppingCartOutlined /> Cart
+          </Menu.Item>
+        </Menu>
+      </Header>
+
+      {/* Cart Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-opacity-50 z-40 transition-opacity duration-300"
+          onClick={handleCloseSidebar}
+        ></div>
+      )}
+
+      {/* Main sidebar content */}
+      <div
+        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-lg p-6 z-50 overflow-y-auto transition-transform duration-300 ease-in-out transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
-        <Menu.Item key="3">
-          <UserOutlined /> Account
-        </Menu.Item>
-        <Menu.Item key="4">
-          <ShoppingCartOutlined /> Cart
-        </Menu.Item>
-      </Menu>
-    </Header>
+        <Flex justify="space-between" align="center" className="mb-6">
+          <Typography.Title level={4} className="!mb-0">Your Cart</Typography.Title>
+          <Button
+            type="text"
+            icon={<CloseOutlined />}
+            onClick={handleCloseSidebar}
+            className="!text-xl"
+          />
+        </Flex>
+        {/* Placeholder content for the cart */}
+        <div className="text-gray-500">Your cart is currently empty.</div>
+        {/* You would populate this section with cart items */}
+      </div>
+    </>
   );
 }
 
