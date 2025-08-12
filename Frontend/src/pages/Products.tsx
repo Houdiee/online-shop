@@ -122,8 +122,10 @@ export default function Products() {
 
   return (
     <Layout>
-      <Space direction="vertical" size="large">
-        <Navbar productsData={products} />
+      <Space direction="vertical" size="small">
+        <Navbar
+          productsData={products}
+        />
 
         <Content>
           <Flex vertical>

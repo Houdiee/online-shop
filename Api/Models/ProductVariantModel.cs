@@ -8,6 +8,8 @@ public class ProductVariantModel
 
   public required string Name { get; set; }
 
+  public required string ParentProductName { get; set; }
+
   public required decimal Price { get; set; }
 
   public decimal? DiscountedPrice { get; set; }

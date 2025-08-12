@@ -9,6 +9,7 @@ export type Product = {
 
 export type ProductVariant = {
   id: number;
+  parentProductName: string;
   name: string;
   photoUrls: string[];
   price: number;

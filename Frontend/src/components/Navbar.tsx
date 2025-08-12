@@ -8,12 +8,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Fuse from "fuse.js";
 import { API_BASE_URL } from "../main";
 import CartMenu from "./CartMenu";
+import type { ShoppingCart } from "../types/shopping-cart";
 
 interface NavbarProps {
   productsData?: Product[];
+  shoppingCartData?: ShoppingCart;
 };
 
-export default function Navbar({ productsData }: NavbarProps) {
+export default function Navbar({ productsData, shoppingCartData }: NavbarProps) {
   const [searchValue, setSearchValue] = useState<string>("");
   const [options, setOptions] = useState<{ value: string }[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -44,6 +46,9 @@ export default function Navbar({ productsData }: NavbarProps) {
   };
 
   useEffect(() => {
+    // TODO TESTING ONLY
+    setIsSidebarOpen(true);
+
     const fetchProducts = async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}/products`);
@@ -105,14 +110,6 @@ export default function Navbar({ productsData }: NavbarProps) {
     }
   };
 
-  const handleOpenSidebar = () => {
-    setIsSidebarOpen(true);
-  };
-
-  const handleCloseSidebar = () => {
-    setIsSidebarOpen(false);
-  };
-
   return (
     <>
       <Header className="!bg-white flex items-center justify-between px-4">
@@ -152,13 +149,17 @@ export default function Navbar({ productsData }: NavbarProps) {
           <Menu.Item key="3">
             <UserOutlined /> Account
           </Menu.Item>
-          <Menu.Item key="4" onClick={handleOpenSidebar}>
+          <Menu.Item key="4" onClick={() => setIsSidebarOpen(true)}>
             <ShoppingCartOutlined /> Cart
           </Menu.Item>
         </Menu>
       </Header>
 
-      <CartMenu isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
+      <CartMenu
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        shoppingCartData={shoppingCartData}
+      />
     </>
   );
 }
