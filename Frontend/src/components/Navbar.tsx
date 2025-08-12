@@ -2,14 +2,18 @@ import { useEffect, useState } from "react";
 import type { Product } from "../types/product";
 import axios from "axios";
 import { Header } from "antd/es/layout/layout";
-import { AutoComplete, Flex, Input, Menu, Space, Typography, Button } from "antd";
-import { ShoppingCartOutlined, UserOutlined, CloseOutlined } from "@ant-design/icons";
-import { Link, useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
+import { AutoComplete, Flex, Input, Menu, Space, Typography } from "antd";
+import { ShoppingCartOutlined, UserOutlined } from "@ant-design/icons";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Fuse from "fuse.js";
 import { API_BASE_URL } from "../main";
+import CartMenu from "./CartMenu";
 
+interface NavbarProps {
+  productsData?: Product[];
+};
 
-export default function Navbar() {
+export default function Navbar({ productsData }: NavbarProps) {
   const [searchValue, setSearchValue] = useState<string>("");
   const [options, setOptions] = useState<{ value: string }[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -34,7 +38,7 @@ export default function Navbar() {
             <Typography.Text>{product.name}</Typography.Text>
           </Space>
           <Typography.Text type="secondary" className="justify-self-end">{product.variants.length} options</Typography.Text>
-        </Flex >
+        </Flex>
       </Link>
     );
   };
@@ -50,8 +54,12 @@ export default function Navbar() {
       }
     };
 
-    fetchProducts();
-  }, []);
+    if (!productsData) {
+      fetchProducts();
+    } else {
+      setProducts(productsData);
+    }
+  }, [productsData]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -150,33 +158,7 @@ export default function Navbar() {
         </Menu>
       </Header>
 
-      {/* Cart Sidebar Backdrop */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-opacity-50 z-40 transition-opacity duration-300"
-          onClick={handleCloseSidebar}
-        ></div>
-      )}
-
-      {/* Main sidebar content */}
-      <div
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-lg p-6 z-50 overflow-y-auto transition-transform duration-300 ease-in-out transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-      >
-        <Flex justify="space-between" align="center" className="mb-6">
-          <Typography.Title level={4} className="!mb-0">Your Cart</Typography.Title>
-          <Button
-            type="text"
-            icon={<CloseOutlined />}
-            onClick={handleCloseSidebar}
-            className="!text-xl"
-          />
-        </Flex>
-        {/* Placeholder content for the cart */}
-        <div className="text-gray-500">Your cart is currently empty.</div>
-        {/* You would populate this section with cart items */}
-      </div>
+      <CartMenu isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
     </>
   );
 }
-

@@ -123,7 +123,7 @@ export default function Products() {
   return (
     <Layout>
       <Space direction="vertical" size="large">
-        <Navbar />
+        <Navbar productsData={products} />
 
         <Content>
           <Flex vertical>
