@@ -13,4 +13,9 @@ export type ShoppingCart = {
     productVariant: ProductVariant;
     quantity: number;
   }>;
-}
+  totalCost: number;
+};
+
+export type UpdateCartItemQuantity = {
+  quantity: number;
+};
