@@ -87,30 +87,33 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
           <div className="flex-grow overflow-y-auto pr-2">
             <Flex vertical gap="middle">
               {cart.items.map(item => (
-                <>
+                <div key={item.id}>
                   <Divider />
-                  <Flex key={item.id} gap="middle" align="start">
+                  <Flex gap="middle" align="center" className="my-4">
                     <Image
                       src={`${API_BASE_URL}/${item.productVariant.photoUrls[0]}`}
-                      width={80}
-                      className="rounded-lg"
+                      width={100}
+                      className="rounded-lg shadow-sm"
                       preview={false}
                     />
+
                     <Flex vertical justify="center" className="flex-grow">
-                      <Typography.Text strong>{item.productVariant.parentProductName}</Typography.Text>
-                      <Typography.Text type="secondary">{item.productVariant.name}</Typography.Text>
-                      <Flex justify="space-between" align="center" className="mt-2">
-                        <Typography.Text>${item.productVariant.price}</Typography.Text>
+                      <Typography.Text strong className="text-base">{item.productVariant.parentProductName}</Typography.Text>
+                      <Typography.Text type="secondary" className="text-sm">{item.productVariant.name}</Typography.Text>
+
+                      <Flex justify="space-between">
                         <QuantitySelector
                           quantity={item.quantity}
                           onQuantityChange={(newQuantity) => handleQuantityChange(item.id, newQuantity)}
                           itemId={item.id}
                           isInCart
+                          hideLabel
                         />
+                        <Typography.Title level={5}>${(item.productVariant.price * item.quantity).toFixed(2)}</Typography.Title>
                       </Flex>
                     </Flex>
                   </Flex>
-                </>
+                </div>
               ))}
             </Flex>
           </div>

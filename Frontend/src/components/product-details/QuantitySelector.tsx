@@ -7,9 +7,11 @@ type QuantitySelectorProps = {
   onQuantityChange: (quantity: number) => void;
   itemId?: number;
   isInCart?: boolean;
+  hideLabel?: boolean;
+  className?: string;
 };
 
-export default function QuantitySelector({ quantity, onQuantityChange, itemId, isInCart }: QuantitySelectorProps) {
+export default function QuantitySelector({ quantity, onQuantityChange, itemId, isInCart, hideLabel, className }: QuantitySelectorProps) {
   const handleQuantityChange = (value: number | null) => {
     const newQuantity = value || 1;
     onQuantityChange(newQuantity);
@@ -23,11 +25,12 @@ export default function QuantitySelector({ quantity, onQuantityChange, itemId, i
 
   return (
     <Form layout="vertical">
-      <Form.Item label="Quantity">
+      <Form.Item label={hideLabel ? "" : "Quantity"}>
         <InputNumber
           value={quantity}
           min={1}
           onChange={handleQuantityChange}
+          className={className}
         />
       </Form.Item>
     </Form>
