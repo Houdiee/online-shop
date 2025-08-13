@@ -124,6 +124,7 @@ public class UsersController(ApiDbContext context, IResend resend) : ControllerB
     UserModel? user = await _context.Users
       .Include(u => u.ShoppingCart)
         .ThenInclude(sh => sh.Items)
+          .ThenInclude(i => i.ProductVariant)
       .Include(u => u.Orders)
         .ThenInclude(o => o.OrderItems)
           .ThenInclude(oi => oi.ProductVariant)

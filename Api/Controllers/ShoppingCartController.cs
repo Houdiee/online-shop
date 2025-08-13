@@ -38,6 +38,7 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
                 Items = [],
             };
             _context.ShoppingCarts.Add(shoppingCart);
+            await _context.SaveChangesAsync();
         }
 
         ShoppingCartItemModel? existingCartItem = shoppingCart.Items
@@ -59,17 +60,11 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
             shoppingCart.Items.Add(newCartItem);
         }
 
-        _context.ShoppingCarts.Update(shoppingCart);
         await _context.SaveChangesAsync();
 
         await UpdateTotalCost(shoppingCart.Id);
 
-        ShoppingCartModel? updatedShoppingCart = await _context.ShoppingCarts
-            .Include(sc => sc.Items)
-            .ThenInclude(sci => sci.ProductVariant)
-            .FirstOrDefaultAsync(sc => sc.UserId == userId);
-
-        return Ok(updatedShoppingCart);
+        return Ok(shoppingCart);
     }
 
     private async Task UpdateTotalCost(int shoppingCartId)
