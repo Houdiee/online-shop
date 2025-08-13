@@ -6,11 +6,10 @@ import { API_BASE_URL, user } from "../../main";
 
 export default function AddToCartButton({ productVariantId, quantity }: AddShoppingCartItemRequest) {
   const handleAddToCart = async () => {
-    const response = await axios.post(`${API_BASE_URL}/users/${user.id}/shoppingcart`, {
+    await axios.post(`${API_BASE_URL}/users/${user.id}/shoppingcart`, {
       productVariantId,
       quantity,
     });
-    user.shoppingCart = response.data;
     console.log(user);
   };
 

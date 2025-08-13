@@ -49,15 +49,17 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
         }
         else
         {
-            ShoppingCartItemModel? newCartItem = new()
+            ShoppingCartItemModel newCartItem = new()
             {
                 ProductVariantId = request.ProductVariantId,
+                ProductVariant = productVariant,
                 Quantity = request.Quantity,
                 ShoppingCartId = shoppingCart.Id
             };
             shoppingCart.Items.Add(newCartItem);
         }
 
+        _context.ShoppingCarts.Update(shoppingCart);
         await _context.SaveChangesAsync();
 
         await UpdateTotalCost(shoppingCart.Id);

@@ -102,7 +102,7 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
                         preview={false}
                       />
 
-                      <Space direction="vertical" size="large" className="flex-grow justify-center">
+                      <Space direction="vertical" size="middle" className="flex-grow justify-center">
                         <Typography.Text strong className="text-base">{item.productVariant.parentProductName}</Typography.Text>
                         <Typography.Text type="secondary" className="text-sm">{item.productVariant.name}</Typography.Text>
 

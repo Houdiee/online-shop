@@ -46,9 +46,6 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
   };
 
   useEffect(() => {
-    // TODO TESTING ONLY
-    setIsSidebarOpen(true);
-
     const fetchProducts = async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}/products`);
