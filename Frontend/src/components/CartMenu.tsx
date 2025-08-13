@@ -1,5 +1,5 @@
 import { CloseOutlined } from "@ant-design/icons";
-import { Button, Divider, Flex, Image, Typography } from "antd";
+import { Button, Divider, Flex, Image, Space, Typography } from "antd";
 import { useEffect, useState } from "react";
 import type { ShoppingCart } from "../types/shopping-cart";
 import axios from "axios";
@@ -93,7 +93,7 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
               {cart.items.map(item => (
                 item.productVariant && (
                   <div key={item.id}>
-                    <Divider />
+                    <Divider size="small" />
                     <Flex gap="middle" align="center" className="my-4">
                       <Image
                         src={`${API_BASE_URL}/${item.productVariant.photoUrls[0]}`}
@@ -102,7 +102,7 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
                         preview={false}
                       />
 
-                      <Flex vertical justify="center" className="flex-grow">
+                      <Space direction="vertical" size="large" className="flex-grow justify-center">
                         <Typography.Text strong className="text-base">{item.productVariant.parentProductName}</Typography.Text>
                         <Typography.Text type="secondary" className="text-sm">{item.productVariant.name}</Typography.Text>
 
@@ -116,7 +116,7 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
                           />
                           <Typography.Title level={5}>${((item.productVariant?.price || 0) * item.quantity).toFixed(2)}</Typography.Title>
                         </Flex>
-                      </Flex>
+                      </Space>
                     </Flex>
                   </div>
                 )
