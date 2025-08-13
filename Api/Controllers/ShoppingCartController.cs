@@ -60,6 +60,8 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        await UpdateTotalCost(shoppingCart.Id);
+
         ShoppingCartModel? updatedShoppingCart = await _context.ShoppingCarts
             .Include(sc => sc.Items)
             .ThenInclude(sci => sci.ProductVariant)
@@ -68,6 +70,23 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
         return Ok(updatedShoppingCart);
     }
 
+    private async Task UpdateTotalCost(int shoppingCartId)
+    {
+        ShoppingCartModel? shoppingCart = await _context.ShoppingCarts
+            .Include(sc => sc.Items)
+            .ThenInclude(sci => sci.ProductVariant)
+            .FirstOrDefaultAsync(sc => sc.Id == shoppingCartId);
+
+        if (shoppingCart != null)
+        {
+            shoppingCart.TotalCost = 0;
+            foreach (var item in shoppingCart.Items)
+            {
+                shoppingCart.TotalCost += item.Quantity * (item.ProductVariant.DiscountedPrice ?? item.ProductVariant.Price);
+            }
+            await _context.SaveChangesAsync();
+        }
+    }
 
     [HttpDelete("{shoppingCartItemId}")]
     public async Task<IActionResult> DeleteItemFromShoppingCart(int userId, int shoppingCartItemId)
@@ -87,6 +106,8 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
         {
             _context.ShoppingCartItems.Remove(itemToRemove);
             await _context.SaveChangesAsync();
+
+            await UpdateTotalCost(itemToRemove.ShoppingCartId);
 
             return NoContent();
         }
@@ -111,7 +132,7 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
 
         if (itemToUpdate == null)
         {
-            return NotFound($"Shopping cart item with ID {shoppingCartItemId} not found in user's cart or for user ID {userId}.");
+            return NotFound($"Shopping cart item with ID {shoppingCartItemId} not found in user's cart");
         }
 
         itemToUpdate.Quantity = request.Quantity;
@@ -121,7 +142,20 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
             _context.ShoppingCartItems.Update(itemToUpdate);
             await _context.SaveChangesAsync();
 
-            return Ok();
+            await UpdateTotalCost(itemToUpdate.ShoppingCartId);
+
+            ShoppingCartModel? updatedShoppingCart = await _context.ShoppingCarts
+                .Include(sc => sc.Items)
+                .ThenInclude(sci => sci.ProductVariant)
+                .ThenInclude(pv => pv.Product)
+                .FirstOrDefaultAsync(sc => sc.Id == itemToUpdate.ShoppingCartId);
+
+            if (updatedShoppingCart == null)
+            {
+                return NotFound("Updated shopping cart could not be found.");
+            }
+
+            return Ok(updatedShoppingCart);
         }
         catch (DbUpdateException ex)
         {
