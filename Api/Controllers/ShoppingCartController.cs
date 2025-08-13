@@ -72,27 +72,61 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
     [HttpDelete("{shoppingCartItemId}")]
     public async Task<IActionResult> DeleteItemFromShoppingCart(int userId, int shoppingCartItemId)
     {
-        ShoppingCartModel? shoppingCart = await _context.ShoppingCarts
-            .Include(sc => sc.Items)
-            .FirstOrDefaultAsync(sc => sc.UserId == userId);
-
-        if (shoppingCart == null)
-        {
-            return NotFound($"Shopping cart for user ID {userId} not found.");
-        }
-
-        var itemToRemove = shoppingCart.Items
-            .FirstOrDefault(item => item.Id == shoppingCartItemId);
+        ShoppingCartItemModel? itemToRemove = await _context.ShoppingCartItems
+            .Include(sci => sci.ShoppingCart)
+            .FirstOrDefaultAsync(item =>
+                item.Id == shoppingCartItemId &&
+                item.ShoppingCart.UserId == userId);
 
         if (itemToRemove == null)
         {
-            return NotFound($"Shopping cart item with ID {shoppingCartItemId} not found in user's cart.");
+            return NotFound($"Shopping cart item with ID {shoppingCartItemId} not found in user's cart or for user ID {userId}.");
         }
 
-        shoppingCart.Items.Remove(itemToRemove);
+        try
+        {
+            _context.ShoppingCartItems.Remove(itemToRemove);
+            await _context.SaveChangesAsync();
 
-        await _context.SaveChangesAsync();
+            return NoContent();
+        }
+        catch (DbUpdateException ex)
+        {
+            Console.WriteLine($"Error: {ex}");
+            return StatusCode(500, "An error occurred while deleting the item from the database.");
+        }
+    }
 
-        return NoContent();
+    [HttpPatch("{shoppingCartItemId}")]
+    public async Task<IActionResult> UpdateItemQuantity(
+        int userId,
+        int shoppingCartItemId,
+        [FromBody] UpdateCartItemQuantityRequest request)
+    {
+        ShoppingCartItemModel? itemToUpdate = await _context.ShoppingCartItems
+            .Include(sci => sci.ShoppingCart)
+            .FirstOrDefaultAsync(item =>
+                item.Id == shoppingCartItemId &&
+                item.ShoppingCart.UserId == userId);
+
+        if (itemToUpdate == null)
+        {
+            return NotFound($"Shopping cart item with ID {shoppingCartItemId} not found in user's cart or for user ID {userId}.");
+        }
+
+        itemToUpdate.Quantity = request.Quantity;
+
+        try
+        {
+            _context.ShoppingCartItems.Update(itemToUpdate);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+        catch (DbUpdateException ex)
+        {
+            Console.WriteLine($"Error: {ex}");
+            return StatusCode(500, "An error occurred while updating the item quantity from the database.");
+        }
     }
 }

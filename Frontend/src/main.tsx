@@ -18,7 +18,7 @@ export const user: User = {
   orders: [],
 };
 
-export const API_BASE_URL = "https://localhost:5001";
+export const API_BASE_URL = "http://localhost:5000";
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
