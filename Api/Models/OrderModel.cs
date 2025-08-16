@@ -10,6 +10,7 @@ public class OrderModel
 
     public required decimal TotalCost { get; set; }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public required OrderStatus Status { get; set; }
 
     public required DateTime OrderedAt { get; set; }
