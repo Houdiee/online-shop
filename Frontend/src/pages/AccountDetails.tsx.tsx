@@ -1,14 +1,173 @@
-import { Layout, Space } from "antd";
+import React, { useEffect, useState } from "react";
+import { Card, Tabs, Form, Input, Table, Spin, Typography, Space, Tag, Layout } from "antd";
+import axios from "axios";
+import { type Order } from "../types/order";
+import { type User } from "../types/user";
+import { API_BASE_URL, user } from "../main";
 import Navbar from "../components/Navbar";
 
-export default function AccountDetails() {
+// Define columns for the main orders table
+const orderColumns = [
+  {
+    title: "Order ID",
+    dataIndex: "id",
+    key: "id",
+  },
+  {
+    title: "Total Cost",
+    dataIndex: "totalCost",
+    key: "totalCost",
+    render: (totalCost: number) => `$${totalCost.toFixed(2)}`,
+  },
+  {
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
+    render: (status: string) => {
+      let color = 'geekblue';
+      if (status === 'completed') {
+        color = 'green';
+      } else if (status === 'cancelled') {
+        color = 'red';
+      }
+      return (
+        <Tag color={color} key={status}>
+          {status.toUpperCase()}
+        </Tag>
+      );
+    },
+  },
+  {
+    title: "Ordered At",
+    dataIndex: "orderedAt",
+    key: "orderedAt",
+    render: (date: Date) => new Date(date).toLocaleDateString(),
+  },
+];
+
+// Define columns for the nested table of order items
+const orderItemColumns = [
+  {
+    title: "Product Name",
+    dataIndex: "productNameAtOrder",
+    key: "productNameAtOrder",
+  },
+  {
+    title: "Variant",
+    dataIndex: "variantNameAtOrder",
+    key: "variantNameAtOrder",
+  },
+  {
+    title: "Quantity",
+    dataIndex: "quantity",
+    key: "quantity",
+  },
+  {
+    title: "Price",
+    dataIndex: "priceAtOrder",
+    key: "priceAtOrder",
+    render: (price: number) => `$${price.toFixed(2)}`,
+  },
+];
+
+export default function AccountCenter() {
+  const [userData, setUserData] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get<User>(`${API_BASE_URL}/users/${user.id}`);
+        setUserData(response.data);
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const items = [
+    {
+      key: "personal-information",
+      label: "Personal Information",
+      children: (
+        <Spin spinning={loading} tip="Loading personal info...">
+          {userData ? (
+            <Form
+              layout="vertical"
+              initialValues={userData}
+              disabled
+            >
+              <Form.Item label="First Name" name="firstName">
+                <Input />
+              </Form.Item>
+              <Form.Item label="Last Name" name="lastName">
+                <Input />
+              </Form.Item>
+              <Form.Item label="Email" name="email">
+                <Input />
+              </Form.Item>
+              <Form.Item label="Role" name="role">
+                <Input />
+              </Form.Item>
+            </Form>
+          ) : (
+            <Typography.Text>No personal information available.</Typography.Text>
+          )}
+        </Spin>
+      ),
+    },
+    {
+      key: "orders",
+      label: "Orders",
+      children: (
+        <Spin spinning={loading} tip="Loading orders...">
+          {userData && userData.orders.length > 0 ? (
+            <Table
+              dataSource={userData.orders}
+              columns={orderColumns}
+              rowKey="id"
+              expandable={{
+                expandedRowRender: (record) => (
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <Typography.Title level={5}>Order Items</Typography.Title>
+                    <Table
+                      columns={orderItemColumns}
+                      dataSource={record.orderItems}
+                      pagination={false}
+                      rowKey="id"
+                      size="small"
+                    />
+                  </Space>
+                ),
+              }}
+            />
+          ) : (
+            <Typography.Text>You have no orders yet.</Typography.Text>
+          )}
+        </Spin>
+      ),
+    },
+  ];
+
   return (
-    <>
-      <Layout>
-        <Space direction="vertical" size="small">
-          <Navbar />
-        </Space>
-      </Layout>
-    </>
+    <Layout>
+      <Navbar />
+
+      <div className="flex justify-center items-center p-6 bg-gray-100 min-h-screen">
+        <Card
+          title="Account Center"
+          style={{ width: "100%", maxWidth: 800 }}
+        >
+          <Tabs items={items} />
+        </Card>
+      </div>
+    </Layout>
   );
 }
+
+
