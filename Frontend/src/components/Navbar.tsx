@@ -144,7 +144,9 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
           className="flex-1 min-w-0 border-b-0 !p-0 !h-auto justify-end"
         >
           <Menu.Item key="3">
-            <UserOutlined /> Account
+            <Link to="/account">
+              <UserOutlined /> Account
+            </Link>
           </Menu.Item>
           <Menu.Item key="4" onClick={() => setIsSidebarOpen(true)}>
             <ShoppingCartOutlined /> Cart

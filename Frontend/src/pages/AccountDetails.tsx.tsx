@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { Card, Tabs, Form, Input, Table, Spin, Typography, Space, Tag, Layout } from "antd";
 import axios from "axios";
-import { UserOutlined } from "@ant-design/icons";
-import type { User } from "../types/user";
+import { UserOutlined, CaretRightOutlined } from "@ant-design/icons";
 import { API_BASE_URL, user } from "../main";
 import Navbar from "../components/Navbar";
-import type { Order } from "../types/order";
+import type { User } from "../types/user";
 
 const orderColumns = [
   {
@@ -45,7 +44,6 @@ const orderColumns = [
   },
 ];
 
-// Define columns for the nested table of order items
 const orderItemColumns = [
   {
     title: "Product Name",
@@ -78,7 +76,7 @@ export default function AccountCenter() {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get<User & { orders: Order[] }>(`${API_BASE_URL}/users/${user.id}`);
+        const response = await axios.get(`${API_BASE_URL}/users/${user.id}`);
         setUserData(response.data);
       } catch (error) {
         console.error("Failed to fetch user data:", error);
@@ -132,6 +130,16 @@ export default function AccountCenter() {
               columns={orderColumns}
               rowKey="id"
               expandable={{
+                expandIcon: ({ expanded, onExpand, record }) => (
+                  <CaretRightOutlined
+                    onClick={e => onExpand(record, e)}
+                    style={{
+                      transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s',
+                      cursor: 'pointer'
+                    }}
+                  />
+                ),
                 expandedRowRender: (record) => (
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <Typography.Title level={5}>Order Items</Typography.Title>
@@ -175,5 +183,4 @@ export default function AccountCenter() {
     </Layout >
   );
 }
-
 
