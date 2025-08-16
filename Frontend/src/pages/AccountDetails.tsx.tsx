@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Tabs, Form, Input, Table, Spin, Typography, Space, Tag, Layout } from "antd";
 import axios from "axios";
-import { type Order } from "../types/order";
-import { type User } from "../types/user";
+import { UserOutlined } from "@ant-design/icons";
+import type { User } from "../types/user";
 import { API_BASE_URL, user } from "../main";
 import Navbar from "../components/Navbar";
+import type { Order } from "../types/order";
 
-// Define columns for the main orders table
 const orderColumns = [
   {
     title: "Order ID",
@@ -32,7 +32,7 @@ const orderColumns = [
       }
       return (
         <Tag color={color} key={status}>
-          {status.toUpperCase()}
+          {status}
         </Tag>
       );
     },
@@ -78,7 +78,7 @@ export default function AccountCenter() {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get<User>(`${API_BASE_URL}/users/${user.id}`);
+        const response = await axios.get<User & { orders: Order[] }>(`${API_BASE_URL}/users/${user.id}`);
         setUserData(response.data);
       } catch (error) {
         console.error("Failed to fetch user data:", error);
@@ -156,17 +156,23 @@ export default function AccountCenter() {
 
   return (
     <Layout>
-      <Navbar />
-
-      <div className="flex justify-center items-center p-6 bg-gray-100 min-h-screen">
-        <Card
-          title="Account Center"
-          style={{ width: "100%", maxWidth: 800 }}
-        >
-          <Tabs items={items} />
-        </Card>
-      </div>
-    </Layout>
+      <Space direction="vertical" size="large">
+        <Navbar />
+        <div className="flex justify-center p-6 bg-gray-100">
+          <Card
+            title={(
+              <Space>
+                <UserOutlined />
+                <span>Account Center</span>
+              </Space>
+            )}
+            style={{ width: "100%", maxWidth: 800 }}
+          >
+            <Tabs items={items} />
+          </Card>
+        </div>
+      </Space>
+    </Layout >
   );
 }
 
