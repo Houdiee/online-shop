@@ -15,6 +15,7 @@ interface CartMenuProps {
 
 export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenuProps) {
   const [cart, setCart] = useState<ShoppingCart | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -50,6 +51,20 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
     }
     return total;
   }, 0);
+
+  const handleCheckout = async () => {
+    setIsCheckingOut(true);
+
+    if (!cart) {
+      console.error("Cannot checkout with empty cart");
+      return;
+    }
+
+    const response = await axios.post(`${API_BASE_URL}/payment/checkout/${cart.id}`);
+    const redirectURL = response.data.url;
+    window.location.href = redirectURL;
+    setIsCheckingOut(false);
+  };
 
 
   return (
@@ -133,8 +148,14 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
               <Typography.Title level={4} className="!mb-0">Total:</Typography.Title>
               <Typography.Title level={4}>${totalCost?.toFixed(2)}</Typography.Title>
             </Flex>
-            <Button type="primary" size="large" block>
-              Go to Checkout
+            <Button
+              type="primary"
+              size="large"
+              block
+              onClick={handleCheckout}
+              disabled={isCheckingOut}
+            >
+              {isCheckingOut ? "Checking out..." : "Go to Checkout"}
             </Button>
           </div>
         )}

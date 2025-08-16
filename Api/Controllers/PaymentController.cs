@@ -83,7 +83,7 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
         try
         {
             Session? session = await service.CreateAsync(options);
-            return Redirect(session.Url);
+            return Ok(new { url = session.Url });
         }
         catch (StripeException e)
         {
