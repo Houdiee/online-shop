@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   Row,
@@ -14,11 +14,20 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { API_BASE_URL } from '../main';
-import StatisticCard from '../components/admin/StatisticCard';
-import type { Product } from '../types/product';
 import Navbar from '../components/Navbar';
+import StatisticCard from '../components/admin/StatisticCard';
 
 const { Option } = Select;
+
+interface Product {
+  id: string;
+  name: string;
+  variants: Array<{
+    id: string;
+    price: number;
+    photoUrls: string[];
+  }>;
+}
 
 interface MostPopularProductStats {
   product: Product;
@@ -48,6 +57,34 @@ interface DashboardData {
   mostPopularProducts: MostPopularProductStats[];
 }
 
+const DashboardStatisticCard = ({ title, timeFrame, setTimeFrame, value, precision = 0 }) => {
+  const getLabel = (timeFrame: string) => {
+    return timeFrame.replace('days', ' Days').replace('24hours', '24 Hours');
+  };
+
+  return (
+    <Col xs={24} md={12} lg={8}>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="m-0 text-base font-medium">{title}</h3>
+        <Select
+          defaultValue={timeFrame}
+          style={{ width: 150 }}
+          onChange={setTimeFrame}
+        >
+          <Option value="24hours">Last 24 Hours</Option>
+          <Option value="7days">Last 7 Days</Option>
+          <Option value="30days">Last 30 Days</Option>
+        </Select>
+      </div>
+      <StatisticCard
+        title={`${title} (${getLabel(timeFrame)})`}
+        value={value}
+        precision={precision}
+      />
+    </Col>
+  );
+};
+
 const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
   {
     title: 'Image',
@@ -55,6 +92,7 @@ const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
     render: (_, record) => (
       <img
         src={`${API_BASE_URL}/${record.product.variants[0].photoUrls[0]}`}
+        alt={record.product.name}
         className="h-10 w-10 object-cover rounded-md"
       />
     ),
@@ -92,7 +130,7 @@ const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const [productsSoldTimeFrame, setProductsSoldTimeFrame] = useState('7days');
   const [revenueTimeFrame, setRevenueTimeFrame] = useState('7days');
@@ -143,96 +181,44 @@ export default function Dashboard() {
     mostPopularProducts,
   } = dashboardData;
 
-  const getLabel = (timeFrame: string) => {
-    return timeFrame.replace('days', ' Days').replace('24hours', '24 Hours');
-  };
-
   return (
     <Layout>
       <Navbar />
       <div className="p-6 bg-gray-100 min-h-screen font-sans">
         <Row gutter={[24, 24]} className="mb-6">
+          <DashboardStatisticCard
+            title="Products Sold"
+            timeFrame={productsSoldTimeFrame}
+            setTimeFrame={setProductsSoldTimeFrame}
+            value={getStatisticValue(productsSoldTimeFrame, 'productsSold')}
+          />
+          <DashboardStatisticCard
+            title="Total Revenue"
+            timeFrame={revenueTimeFrame}
+            setTimeFrame={setRevenueTimeFrame}
+            value={getStatisticValue(revenueTimeFrame, 'totalRevenue')}
+            precision={2}
+          />
+          <DashboardStatisticCard
+            title="Completed Orders"
+            timeFrame={completedOrdersTimeFrame}
+            setTimeFrame={setCompletedOrdersTimeFrame}
+            value={getStatisticValue(completedOrdersTimeFrame, 'completedOrders')}
+          />
           <Col xs={24} md={12} lg={8}>
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="m-0 text-base font-medium">Products Sold</h3>
-              <Select
-                defaultValue="7days"
-                style={{ width: 150 }}
-                onChange={setProductsSoldTimeFrame}
-              >
-                <Option value="24hours">Last 24 Hours</Option>
-                <Option value="7days">Last 7 Days</Option>
-                <Option value="30days">Last 30 Days</Option>
-              </Select>
-            </div>
-            <StatisticCard
-              title={`Products Sold (${getLabel(productsSoldTimeFrame)})`}
-              value={getStatisticValue(productsSoldTimeFrame, 'productsSold')}
-            />
-          </Col>
-
-          <Col xs={24} md={12} lg={8}>
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="m-0 text-base font-medium">Total Revenue</h3>
-              <Select
-                defaultValue="7days"
-                style={{ width: 150 }}
-                onChange={setRevenueTimeFrame}
-              >
-                <Option value="24hours">Last 24 Hours</Option>
-                <Option value="7days">Last 7 Days</Option>
-                <Option value="30days">Last 30 Days</Option>
-              </Select>
-            </div>
-            <StatisticCard
-              title={`Total Revenue (${getLabel(revenueTimeFrame)})`}
-              value={getStatisticValue(revenueTimeFrame, 'totalRevenue')}
-              precision={2}
-            />
-          </Col>
-
-          <Col xs={24} md={12} lg={8}>
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="m-0 text-base font-medium">Completed Orders</h3>
-              <Select
-                defaultValue="7days"
-                style={{ width: 150 }}
-                onChange={setCompletedOrdersTimeFrame}
-              >
-                <Option value="24hours">Last 24 Hours</Option>
-                <Option value="7days">Last 7 Days</Option>
-                <Option value="30days">Last 30 Days</Option>
-              </Select>
-            </div>
-            <StatisticCard
-              title={`Completed Orders (${getLabel(completedOrdersTimeFrame)})`}
-              value={getStatisticValue(completedOrdersTimeFrame, 'completedOrders')}
-            />
-          </Col>
-
-          <Col xs={24} md={12} lg={8}>
-            <StatisticCard
-              title="Pending Orders"
-              value={pendingOrders}
-            />
+            <StatisticCard title="Pending Orders" value={pendingOrders} />
           </Col>
           <Col xs={24} md={12} lg={8}>
-            <StatisticCard
-              title="Total Registered Users"
-              value={totalRegisteredUsers}
-            />
+            <StatisticCard title="Total Registered Users" value={totalRegisteredUsers} />
           </Col>
           <Col xs={24} md={12} lg={8}>
-            <StatisticCard
-              title="Total Products"
-              value={totalProducts}
-            />
+            <StatisticCard title="Total Products" value={totalProducts} />
           </Col>
         </Row>
 
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={16}>
-            <Card title="Most Popular Products" className="h-full">
+            <Card title="Most Popular Products" className="h-full rounded-lg shadow-sm">
               <Table
                 columns={mostPopularProductColumns}
                 dataSource={mostPopularProducts}
@@ -254,7 +240,7 @@ export default function Dashboard() {
           <Col xs={24} lg={8}>
             <Row gutter={[24, 24]} className="h-full">
               <Col xs={24}>
-                <Card title="Inventory" className="h-full">
+                <Card title="Inventory" className="h-full rounded-lg shadow-sm">
                   <span className="font-semibold block mb-2">Low Stock Products:</span>
                   <div className="mb-4">
                     {lowStockProducts.length > 0 ? (
@@ -279,7 +265,7 @@ export default function Dashboard() {
                 </Card>
               </Col>
               <Col xs={24}>
-                <Card title="Top Tags Used" className="h-full">
+                <Card title="Top Tags Used" className="h-full rounded-lg shadow-sm">
                   <div className="flex flex-wrap gap-2">
                     {topTagsUsed.length > 0 ? (
                       topTagsUsed.map((tag, index) => (
@@ -300,3 +286,4 @@ export default function Dashboard() {
     </Layout>
   );
 };
+

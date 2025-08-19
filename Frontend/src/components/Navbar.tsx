@@ -125,10 +125,7 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
               Dashboard
             </Link>
           </Menu.Item>)}
-          <Menu.Item key="home">
-            <Link to="/">Home</Link>
-          </Menu.Item>
-          <Menu.Item key="latest">
+          <Menu.Item key="featured">
             <Link to="/products">Featured</Link>
           </Menu.Item>
         </Menu>

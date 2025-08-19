@@ -36,7 +36,7 @@ const getIcon = (title: string): ReactNode => {
 
 export default function StatisticCard({ title, value, precision }: StatisticCardProps) {
   return (
-    <Card hoverable className="ant-card-statistic">
+    <Card className="ant-card-statistic">
       <Statistic
         title={title}
         value={precision !== undefined ? value.toFixed(precision) : value}
