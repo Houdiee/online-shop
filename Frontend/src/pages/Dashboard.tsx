@@ -12,9 +12,9 @@ import {
   Divider,
   Table,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { API_BASE_URL } from '../main';
 import StatisticCard from '../components/admin/StatisticCard';
-import type { ColumnsType } from 'antd/es/table';
 import type { Product } from '../types/product';
 
 const { Title } = Typography;
@@ -26,7 +26,6 @@ interface MostPopularProductStats {
   totalRevenue: number;
 }
 
-// Overall dashboard data interface
 interface DashboardData {
   productsSoldLast24Hours: number;
   productsSoldLast7Days: number;
@@ -49,7 +48,6 @@ interface DashboardData {
   mostPopularProducts: MostPopularProductStats[];
 }
 
-// Define the columns for the Most Popular Products table
 const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
   {
     title: 'Image',
@@ -58,6 +56,7 @@ const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
       <img
         src={`${API_BASE_URL}/${record.product.variants[0].photoUrls[0]}`}
         className="h-10 w-10 object-cover rounded-md"
+        alt={record.product.name}
       />
     ),
   },
@@ -70,7 +69,6 @@ const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
     title: 'Price',
     key: 'price',
     render: (_, record) => {
-      // Assuming you want to display the base price from the first variant
       const price = record.product.variants && record.product.variants.length > 0
         ? record.product.variants[0].price
         : 'N/A';
@@ -81,11 +79,13 @@ const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
     title: 'Total Sales',
     dataIndex: 'totalSales',
     key: 'totalSales',
+    sorter: (a, b) => a.totalSales - b.totalSales,
   },
   {
     title: 'Total Revenue',
     dataIndex: 'totalRevenue',
     key: 'totalRevenue',
+    sorter: (a, b) => a.totalRevenue - b.totalRevenue,
     render: (revenue: number) => `$${revenue.toFixed(2)}`,
   },
 ];
@@ -94,7 +94,6 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // State for each individual statistic's timeframe
   const [productsSoldTimeFrame, setProductsSoldTimeFrame] = useState('7days');
   const [revenueTimeFrame, setRevenueTimeFrame] = useState('7days');
   const [completedOrdersTimeFrame, setCompletedOrdersTimeFrame] = useState('7days');
@@ -155,7 +154,6 @@ export default function Dashboard() {
           <Title level={2} style={{ margin: 0 }}>Admin Dashboard</Title>
         </div>
 
-        {/* Main Stats Grid */}
         <Row gutter={[24, 24]} className="mb-6">
           <Col xs={24} md={12} lg={8}>
             <div className="flex justify-between items-center mb-2">
@@ -235,9 +233,7 @@ export default function Dashboard() {
           </Col>
         </Row>
 
-        {/* New Popular Products & Other Stats */}
         <Row gutter={[24, 24]}>
-          {/* Most Popular Products Table Card */}
           <Col xs={24} lg={16}>
             <Card title="Most Popular Products" className="h-full">
               <Table
@@ -250,48 +246,52 @@ export default function Dashboard() {
             </Card>
           </Col>
 
-          {/* Combined Stock & Tags Card */}
           <Col xs={24} lg={8}>
-            <Card title="Inventory & Tags" className="h-full">
-              <span className="font-semibold block mb-2">Low Stock Products:</span>
-              <div className="mb-4">
-                {lowStockProducts.length > 0 ? (
-                  lowStockProducts.map((item, index) => (
-                    <Tag key={index} color="warning" className="mb-1">{item}</Tag>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-sm">All products are well-stocked!</p>
-                )}
-              </div>
-              <Divider className="my-2" />
-              <span className="font-semibold block mb-2">Out of Stock Products:</span>
-              <div className="mb-4">
-                {outOfStockProducts.length > 0 ? (
-                  outOfStockProducts.map((item, index) => (
-                    <Tag key={index} color="error" className="mb-1">{item}</Tag>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-sm">No products are out of stock!</p>
-                )}
-              </div>
-              <Divider className="my-2" />
-              <span className="font-semibold block mb-2">Top Tags Used:</span>
-              <div className="flex flex-wrap gap-2">
-                {topTagsUsed.length > 0 ? (
-                  topTagsUsed.map((tag, index) => (
-                    <Tag color={['magenta', 'red', 'volcano', 'orange', 'gold', 'lime', 'green', 'cyan', 'blue', 'geekblue', 'purple'][index % 11]} key={index}>
-                      {tag}
-                    </Tag>
-                  ))
-                ) : (
-                  <p className="text-gray-500">No tags have been used yet.</p>
-                )}
-              </div>
-            </Card>
+            <Row gutter={[24, 24]} className="h-full">
+              <Col xs={24}>
+                <Card title="Inventory" className="h-full">
+                  <span className="font-semibold block mb-2">Low Stock Products:</span>
+                  <div className="mb-4">
+                    {lowStockProducts.length > 0 ? (
+                      lowStockProducts.map((item, index) => (
+                        <Tag key={index} color="warning" className="mb-1">{item}</Tag>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">All products are well-stocked!</p>
+                    )}
+                  </div>
+                  <Divider className="my-2" />
+                  <span className="font-semibold block mb-2">Out of Stock Products:</span>
+                  <div className="mb-4">
+                    {outOfStockProducts.length > 0 ? (
+                      outOfStockProducts.map((item, index) => (
+                        <Tag key={index} color="error" className="mb-1">{item}</Tag>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">No products are out of stock!</p>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+              <Col xs={24}>
+                <Card title="Top Tags Used" className="h-full">
+                  <div className="flex flex-wrap gap-2">
+                    {topTagsUsed.length > 0 ? (
+                      topTagsUsed.map((tag, index) => (
+                        <Tag color={['magenta', 'red', 'volcano', 'orange', 'gold', 'lime', 'green', 'cyan', 'blue', 'geekblue', 'purple'][index % 11]} key={index}>
+                          {tag}
+                        </Tag>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No tags have been used yet.</p>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+            </Row>
           </Col>
         </Row>
       </div>
     </Layout>
   );
 };
-
