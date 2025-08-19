@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import axios from 'axios';
 import {
   Card,
@@ -13,11 +13,10 @@ import {
 } from 'antd';
 import { API_BASE_URL } from '../main';
 import StatisticCard from '../components/admin/StatisticCard';
-import Navbar from '../components/Navbar';
+import type { Product } from '../types/product';
 
 const { Title } = Typography;
 const { Option } = Select;
-
 
 interface DashboardData {
   productsSoldLast24Hours: number;
@@ -38,12 +37,14 @@ interface DashboardData {
   lowStockProducts: string[];
   outOfStockProducts: string[];
   topTagsUsed: string[];
+  mostPopularProducts: Product[];
 }
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // State for each individual statistic's timeframe
   const [productsSoldTimeFrame, setProductsSoldTimeFrame] = useState('7days');
   const [revenueTimeFrame, setRevenueTimeFrame] = useState('7days');
   const [completedOrdersTimeFrame, setCompletedOrdersTimeFrame] = useState('7days');
@@ -90,6 +91,7 @@ export default function Dashboard() {
     lowStockProducts,
     outOfStockProducts,
     topTagsUsed,
+    mostPopularProducts,
   } = dashboardData;
 
   const getLabel = (timeFrame: string) => {
@@ -98,8 +100,10 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <Navbar />
       <div className="p-6 bg-gray-100 min-h-screen font-sans">
+        <div className="flex justify-between items-center mb-8">
+          <Title level={2} style={{ margin: 0 }}>Admin Dashboard</Title>
+        </div>
 
         {/* Main Stats Grid */}
         <Row gutter={[24, 24]} className="mb-6">
@@ -181,28 +185,51 @@ export default function Dashboard() {
           </Col>
         </Row>
 
-        {/* Stock Alerts & Top Tags */}
+        {/* New Popular Products & Other Stats */}
         <Row gutter={[24, 24]}>
-          <Col xs={24} md={12}>
-            <Card title="Stock Alerts" className="h-full">
+          {/* Most Popular Products Table Card */}
+          <Col xs={24} lg={16}>
+            <Card title="Most Popular Products" className="h-full">
               <List
-                header={<span className="font-semibold">Low Stock Products:</span>}
-                bordered={false}
-                dataSource={lowStockProducts}
-                renderItem={(item) => <List.Item>{item}</List.Item>}
-                locale={{ emptyText: 'All products are well-stocked!' }}
-              />
-              <List
-                header={<span className="font-semibold mt-4 block">Out of Stock Products:</span>}
-                bordered={false}
-                dataSource={outOfStockProducts}
-                renderItem={(item) => <List.Item>{item}</List.Item>}
-                locale={{ emptyText: 'No products are out of stock!' }}
+                itemLayout="horizontal"
+                dataSource={mostPopularProducts}
+                renderItem={(item) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      title={<a href={`#product-${item.id}`}>{item.name}</a>}
+                      description={item.variants.length > 0 ? `$${item.variants[0].price}` : 'Price not available'}
+                    />
+                  </List.Item>
+                )}
+                locale={{ emptyText: 'No popular products to display.' }}
               />
             </Card>
           </Col>
-          <Col xs={24} md={12}>
-            <Card title="Top Tags Used" className="h-full">
+
+          {/* Combined Stock & Tags Card */}
+          <Col xs={24} lg={8}>
+            <Card title="Inventory & Tags" className="h-full">
+              <span className="font-semibold block mb-2">Low Stock Products:</span>
+              <div className="mb-4">
+                {lowStockProducts.length > 0 ? (
+                  lowStockProducts.map((item, index) => (
+                    <Tag key={index} color="warning" className="mb-1">{item}</Tag>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm">All products are well-stocked!</p>
+                )}
+              </div>
+              <span className="font-semibold block mb-2">Out of Stock Products:</span>
+              <div className="mb-4">
+                {outOfStockProducts.length > 0 ? (
+                  outOfStockProducts.map((item, index) => (
+                    <Tag key={index} color="error" className="mb-1">{item}</Tag>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm">No products are out of stock!</p>
+                )}
+              </div>
+              <span className="font-semibold block mb-2">Top Tags Used:</span>
               <div className="flex flex-wrap gap-2">
                 {topTagsUsed.length > 0 ? (
                   topTagsUsed.map((tag, index) => (

@@ -102,18 +102,27 @@ public class DashboardController(ApiDbContext context) : ControllerBase
             .Select(g => g.Key)
             .ToListAsync();
 
-        List<int> topProductIds = await _context.OrderItems
-            .GroupBy(oi => oi.ProductVariantId)
-            .Select(g => new { ProductId = g.Key, TotalQuantity = g.Sum(oi => oi.Quantity) })
-            .OrderByDescending(x => x.TotalQuantity)
-            .Take(5)
-            .Select(x => x.ProductId)
-            .ToListAsync();
+        var mostPopularProductsTemp = await _context.OrderItems
+           .Include(oi => oi.ProductVariant)
+           .ThenInclude(pv => pv.Product)
+           .Select(oi => new
+           {
+               ProductName = oi.ProductVariant.Product.Name,
+               Quantity = oi.Quantity,
+               Price = oi.ProductVariant.Price
+           })
+           .ToListAsync();
 
-        List<ProductModel> mostPopularProducts = await _context.Products
-            .Include(p => p.Variants)
-            .Where(p => topProductIds.Contains(p.Id))
-            .ToListAsync();
+        List<MostPopularProductStats> mostPopularProducts = mostPopularProductsTemp
+            .GroupBy(x => x.ProductName)
+            .Select(g => new MostPopularProductStats(
+                g.Key,
+                g.Sum(x => x.Quantity),
+                g.Sum(x => x.Quantity * x.Price)
+            ))
+            .OrderByDescending(x => x.TotalSales)
+            .Take(5)
+            .ToList();
 
         AdminDashboardModel dashboardData = new()
         {
@@ -140,10 +149,10 @@ public class DashboardController(ApiDbContext context) : ControllerBase
             TotalProducts = totalProducts,
 
             TopTagsUsed = topTagsUsed,
-
             MostPopularProducts = mostPopularProducts,
         };
 
         return Ok(dashboardData);
     }
 }
+
