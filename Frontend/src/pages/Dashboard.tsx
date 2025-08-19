@@ -4,7 +4,6 @@ import {
   Row,
   Col,
   Tag,
-  Typography,
   List,
   Spin,
   Layout,
@@ -25,8 +24,6 @@ interface Dashboard {
   outOfStockProducts: string[];
   topTagsUsed: string[];
 }
-
-const { Title } = Typography;
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<Dashboard | null>(null);
