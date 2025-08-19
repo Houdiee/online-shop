@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import {
   Card,
   Row,
   Col,
   Tag,
-  Typography,
   Spin,
   Select,
   Layout,
@@ -16,8 +16,8 @@ import type { ColumnsType } from 'antd/es/table';
 import { API_BASE_URL } from '../main';
 import StatisticCard from '../components/admin/StatisticCard';
 import type { Product } from '../types/product';
+import Navbar from '../components/Navbar';
 
-const { Title } = Typography;
 const { Option } = Select;
 
 interface MostPopularProductStats {
@@ -56,7 +56,6 @@ const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
       <img
         src={`${API_BASE_URL}/${record.product.variants[0].photoUrls[0]}`}
         className="h-10 w-10 object-cover rounded-md"
-        alt={record.product.name}
       />
     ),
   },
@@ -93,6 +92,7 @@ const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const [productsSoldTimeFrame, setProductsSoldTimeFrame] = useState('7days');
   const [revenueTimeFrame, setRevenueTimeFrame] = useState('7days');
@@ -149,11 +149,8 @@ export default function Dashboard() {
 
   return (
     <Layout>
+      <Navbar />
       <div className="p-6 bg-gray-100 min-h-screen font-sans">
-        <div className="flex justify-between items-center mb-8">
-          <Title level={2} style={{ margin: 0 }}>Admin Dashboard</Title>
-        </div>
-
         <Row gutter={[24, 24]} className="mb-6">
           <Col xs={24} md={12} lg={8}>
             <div className="flex justify-between items-center mb-2">
@@ -242,6 +239,14 @@ export default function Dashboard() {
                 rowKey={record => record.product.id}
                 pagination={false}
                 locale={{ emptyText: 'No popular products to display.' }}
+                onRow={(record) => ({
+                  onClick: () => {
+                    const productId = record.product.id;
+                    const variantId = record.product.variants[0].id;
+                    navigate(`/products/${productId}/${variantId}`);
+                  },
+                  className: 'cursor-pointer'
+                })}
               />
             </Card>
           </Col>

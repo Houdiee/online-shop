@@ -129,7 +129,7 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
             <Link to="/">Home</Link>
           </Menu.Item>
           <Menu.Item key="latest">
-            <Link to="/products?sort=sort-group-newest">Latest</Link>
+            <Link to="/products">Featured</Link>
           </Menu.Item>
         </Menu>
 
