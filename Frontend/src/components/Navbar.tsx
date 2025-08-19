@@ -3,10 +3,10 @@ import type { Product } from "../types/product";
 import axios from "axios";
 import { Header } from "antd/es/layout/layout";
 import { AutoComplete, Flex, Input, Menu, Space, Typography } from "antd";
-import { ShoppingCartOutlined, UserOutlined } from "@ant-design/icons";
+import { PlusOutlined, ShoppingCartOutlined, UserOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Fuse from "fuse.js";
-import { API_BASE_URL } from "../main";
+import { API_BASE_URL, user } from "../main";
 import CartMenu from "./CartMenu";
 import type { ShoppingCart } from "../types/shopping-cart";
 
@@ -99,6 +99,11 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
     }
   };
 
+  let isAdmin = false;
+  if (user.role === "admin") {
+    isAdmin = true;
+  }
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       const newSearchParam = searchValue ? `?search=${searchValue}` : '';
@@ -115,10 +120,15 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
           mode="horizontal"
           className="flex-1 min-w-0 border-b-0 !p-0 !h-auto"
         >
-          <Menu.Item key="1">
+          {isAdmin && (<Menu.Item key="create-product">
+            <Link to="/admin/dashboard">
+              Dashboard
+            </Link>
+          </Menu.Item>)}
+          <Menu.Item key="home">
             <Link to="/">Home</Link>
           </Menu.Item>
-          <Menu.Item key="2">
+          <Menu.Item key="latest">
             <Link to="/products?sort=sort-group-newest">Latest</Link>
           </Menu.Item>
         </Menu>
@@ -143,12 +153,18 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
           mode="horizontal"
           className="flex-1 min-w-0 border-b-0 !p-0 !h-auto justify-end"
         >
-          <Menu.Item key="3">
+          {isAdmin && (<Menu.Item key="create-product">
+            <Link to="">
+              <PlusOutlined /> Create New
+            </Link>
+          </Menu.Item>)}
+
+          <Menu.Item key="account">
             <Link to="/account">
               <UserOutlined /> Account
             </Link>
           </Menu.Item>
-          <Menu.Item key="4" onClick={() => setIsSidebarOpen(true)}>
+          <Menu.Item key="cart" onClick={() => setIsSidebarOpen(true)}>
             <ShoppingCartOutlined /> Cart
           </Menu.Item>
         </Menu>

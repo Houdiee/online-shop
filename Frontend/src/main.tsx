@@ -10,10 +10,11 @@ export const user: User = {
   email: "kerimugurlu24@gmail.com",
   firstName: "Kerim",
   lastName: "Kerim",
-  role: "customer",
+  role: "admin",
   shoppingCart: {
     id: 1,
     items: [],
+    totalCost: 0,
   },
   orders: [],
 };
