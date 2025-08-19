@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   Card,
@@ -10,13 +10,20 @@ import {
   Spin,
   Select,
   Layout,
+  Divider,
 } from 'antd';
 import { API_BASE_URL } from '../main';
 import StatisticCard from '../components/admin/StatisticCard';
-import type { Product } from '../types/product';
 
 const { Title } = Typography;
 const { Option } = Select;
+
+// New interface for the most popular products, matching the C# record
+interface MostPopularProductStats {
+  productName: string;
+  totalSales: number;
+  totalRevenue: number;
+}
 
 interface DashboardData {
   productsSoldLast24Hours: number;
@@ -37,7 +44,8 @@ interface DashboardData {
   lowStockProducts: string[];
   outOfStockProducts: string[];
   topTagsUsed: string[];
-  mostPopularProducts: Product[];
+  // Updated type to use the new interface
+  mostPopularProducts: MostPopularProductStats[];
 }
 
 export default function Dashboard() {
@@ -196,8 +204,17 @@ export default function Dashboard() {
                 renderItem={(item) => (
                   <List.Item>
                     <List.Item.Meta
-                      title={<a href={`#product-${item.id}`}>{item.name}</a>}
-                      description={item.variants.length > 0 ? `$${item.variants[0].price}` : 'Price not available'}
+                      title={item.productName}
+                      description={
+                        <div>
+                          <p className="m-0">
+                            <strong>Sales:</strong> {item.totalSales} units
+                          </p>
+                          <p className="m-0">
+                            <strong>Revenue:</strong> ${item.totalRevenue.toFixed(2)}
+                          </p>
+                        </div>
+                      }
                     />
                   </List.Item>
                 )}
@@ -219,6 +236,7 @@ export default function Dashboard() {
                   <p className="text-gray-500 text-sm">All products are well-stocked!</p>
                 )}
               </div>
+              <Divider className="my-2" />
               <span className="font-semibold block mb-2">Out of Stock Products:</span>
               <div className="mb-4">
                 {outOfStockProducts.length > 0 ? (
@@ -229,6 +247,7 @@ export default function Dashboard() {
                   <p className="text-gray-500 text-sm">No products are out of stock!</p>
                 )}
               </div>
+              <Divider className="my-2" />
               <span className="font-semibold block mb-2">Top Tags Used:</span>
               <div className="flex flex-wrap gap-2">
                 {topTagsUsed.length > 0 ? (

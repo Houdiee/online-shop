@@ -19,13 +19,6 @@ public class DashboardController(ApiDbContext context) : ControllerBase
         DateTime sevenDaysAgo = now.AddDays(-7);
         DateTime thirtyDaysAgo = now.AddDays(-30);
 
-        var completedOrdersList = await _context.Orders
-            .Where(ords => ords.OrderedAt >= sevenDaysAgo && ords.Status == OrderStatus.Completed)
-            .ToListAsync();
-
-        Console.WriteLine($"DEBUG: Found {completedOrdersList.Count} completed orders in the last 7 days.");
-
-
         int productsSoldLast24Hours = await _context
             .Orders
             .CountAsync(ords => ords.OrderedAt >= yesterday && ords.Status == OrderStatus.Completed);
@@ -102,19 +95,20 @@ public class DashboardController(ApiDbContext context) : ControllerBase
             .Select(g => g.Key)
             .ToListAsync();
 
-        var mostPopularProductsTemp = await _context.OrderItems
-           .Include(oi => oi.ProductVariant)
-           .ThenInclude(pv => pv.Product)
-           .Select(oi => new
-           {
-               ProductName = oi.ProductVariant.Product.Name,
-               Quantity = oi.Quantity,
-               Price = oi.ProductVariant.Price
-           })
-           .ToListAsync();
+        var mostPopularProductsQuery = await _context.OrderItems
+            .Include(oi => oi.ProductVariant)
+            .ThenInclude(pv => pv.Product)
+            .ThenInclude(p => p.Variants)
+            .Select(oi => new
+            {
+                oi.ProductVariant.Product,
+                oi.Quantity,
+                oi.ProductVariant.Price
+            })
+            .ToListAsync();
 
-        List<MostPopularProductStats> mostPopularProducts = mostPopularProductsTemp
-            .GroupBy(x => x.ProductName)
+        List<MostPopularProductStats> mostPopularProducts = mostPopularProductsQuery
+            .GroupBy(x => x.Product)
             .Select(g => new MostPopularProductStats(
                 g.Key,
                 g.Sum(x => x.Quantity),

@@ -31,7 +31,7 @@ public class AdminDashboardModel
 }
 
 public record MostPopularProductStats(
-    string ProductName,
+    ProductModel Product,
     int TotalSales,
     decimal TotalRevenue
 );
