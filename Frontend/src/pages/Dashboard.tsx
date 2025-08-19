@@ -92,7 +92,6 @@ const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
     render: (_, record) => (
       <img
         src={`${API_BASE_URL}/${record.product.variants[0].photoUrls[0]}`}
-        alt={record.product.name}
         className="h-10 w-10 object-cover rounded-md"
       />
     ),

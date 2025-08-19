@@ -151,7 +151,7 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
           className="flex-1 min-w-0 border-b-0 !p-0 !h-auto justify-end"
         >
           {isAdmin && (<Menu.Item key="create-product">
-            <Link to="">
+            <Link to="/admin/create">
               <PlusOutlined /> Create New
             </Link>
           </Menu.Item>)}
