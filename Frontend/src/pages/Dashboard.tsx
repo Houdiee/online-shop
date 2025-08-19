@@ -6,25 +6,27 @@ import {
   Col,
   Tag,
   Typography,
-  List,
   Spin,
   Select,
   Layout,
   Divider,
+  Table,
 } from 'antd';
 import { API_BASE_URL } from '../main';
 import StatisticCard from '../components/admin/StatisticCard';
+import type { ColumnsType } from 'antd/es/table';
+import type { Product } from '../types/product';
 
 const { Title } = Typography;
 const { Option } = Select;
 
-// New interface for the most popular products, matching the C# record
 interface MostPopularProductStats {
-  productName: string;
+  product: Product;
   totalSales: number;
   totalRevenue: number;
 }
 
+// Overall dashboard data interface
 interface DashboardData {
   productsSoldLast24Hours: number;
   productsSoldLast7Days: number;
@@ -44,9 +46,49 @@ interface DashboardData {
   lowStockProducts: string[];
   outOfStockProducts: string[];
   topTagsUsed: string[];
-  // Updated type to use the new interface
   mostPopularProducts: MostPopularProductStats[];
 }
+
+// Define the columns for the Most Popular Products table
+const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
+  {
+    title: 'Image',
+    key: 'image',
+    render: (_, record) => (
+      <img
+        src={`${API_BASE_URL}/${record.product.variants[0].photoUrls[0]}`}
+        className="h-10 w-10 object-cover rounded-md"
+      />
+    ),
+  },
+  {
+    title: 'Product Name',
+    dataIndex: ['product', 'name'],
+    key: 'productName',
+  },
+  {
+    title: 'Price',
+    key: 'price',
+    render: (_, record) => {
+      // Assuming you want to display the base price from the first variant
+      const price = record.product.variants && record.product.variants.length > 0
+        ? record.product.variants[0].price
+        : 'N/A';
+      return `$${Number(price).toFixed(2)}`;
+    },
+  },
+  {
+    title: 'Total Sales',
+    dataIndex: 'totalSales',
+    key: 'totalSales',
+  },
+  {
+    title: 'Total Revenue',
+    dataIndex: 'totalRevenue',
+    key: 'totalRevenue',
+    render: (revenue: number) => `$${revenue.toFixed(2)}`,
+  },
+];
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -198,26 +240,11 @@ export default function Dashboard() {
           {/* Most Popular Products Table Card */}
           <Col xs={24} lg={16}>
             <Card title="Most Popular Products" className="h-full">
-              <List
-                itemLayout="horizontal"
+              <Table
+                columns={mostPopularProductColumns}
                 dataSource={mostPopularProducts}
-                renderItem={(item) => (
-                  <List.Item>
-                    <List.Item.Meta
-                      title={item.productName}
-                      description={
-                        <div>
-                          <p className="m-0">
-                            <strong>Sales:</strong> {item.totalSales} units
-                          </p>
-                          <p className="m-0">
-                            <strong>Revenue:</strong> ${item.totalRevenue.toFixed(2)}
-                          </p>
-                        </div>
-                      }
-                    />
-                  </List.Item>
-                )}
+                rowKey={record => record.product.id}
+                pagination={false}
                 locale={{ emptyText: 'No popular products to display.' }}
               />
             </Card>
