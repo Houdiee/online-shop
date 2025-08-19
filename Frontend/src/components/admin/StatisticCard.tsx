@@ -12,30 +12,18 @@ import type { ReactNode } from 'react';
 interface StatisticCardProps {
   title: string;
   value: number;
-  precision?: number
-};
-
-export default function StatisticCard({ title, value, precision }: StatisticCardProps) {
-  return (
-    <Card hoverable className="ant-card-statistic">
-      <Statistic
-        title={title}
-        value={precision !== undefined ? value.toFixed(precision) : value}
-        prefix={getIcon(title)}
-      />
-    </Card>
-  );
+  precision?: number;
 }
 
 const getIcon = (title: string): ReactNode => {
   switch (title) {
-    case 'Products Sold (7 Days)':
+    case 'Products Sold':
       return <ShoppingOutlined style={{ fontSize: '24px', color: '#1890ff' }} />;
-    case 'Total Revenue (7 Days)':
+    case 'Total Revenue':
       return <DollarCircleOutlined style={{ fontSize: '24px', color: '#52c41a' }} />;
     case 'Pending Orders':
       return <ClockCircleOutlined style={{ fontSize: '24px', color: '#faad14' }} />;
-    case 'Completed Orders (7 Days)':
+    case 'Completed Orders':
       return <CheckCircleOutlined style={{ fontSize: '24px', color: '#52c41a' }} />;
     case 'Total Registered Users':
       return <UserOutlined style={{ fontSize: '24px', color: '#1890ff' }} />;
@@ -45,3 +33,16 @@ const getIcon = (title: string): ReactNode => {
       return null;
   }
 };
+
+export default function StatisticCard({ title, value, precision }: StatisticCardProps) {
+  return (
+    <Card hoverable className="ant-card-statistic">
+      <Statistic
+        title={title}
+        value={precision !== undefined ? value.toFixed(precision) : value}
+        prefix={getIcon(title.includes('Revenue') ? 'Total Revenue' : title)}
+      />
+    </Card>
+  );
+};
+

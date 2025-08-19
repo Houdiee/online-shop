@@ -1,24 +1,37 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Card,
   Row,
   Col,
   Tag,
+  Typography,
   List,
   Spin,
-  Layout,
+  Select,
 } from 'antd';
-import axios from 'axios';
 import { API_BASE_URL } from '../main';
-import StatisticCard from '../components/admin/StatisticsCard';
-import Navbar from '../components/Navbar';
+import StatisticCard from '../components/admin/StatisticCard';
 
-interface Dashboard {
+const { Title } = Typography;
+const { Option } = Select;
+
+
+interface DashboardData {
+  productsSoldLast24Hours: number;
   productsSoldLast7Days: number;
+  productsSoldLast30Days: number;
+  totalRevenueLast24Hours: number;
   totalRevenueLast7Days: number;
+  totalRevenueLast30Days: number;
   pendingOrders: number;
+  completedOrdersLast24Hours: number;
   completedOrdersLast7Days: number;
+  completedOrdersLast30Days: number;
   totalRegisteredUsers: number;
+  newUsersLast24Hours: number;
+  newUsersLast7Days: number;
+  newUsersLast30Days: number;
   totalProducts: number;
   lowStockProducts: string[];
   outOfStockProducts: string[];
@@ -26,28 +39,39 @@ interface Dashboard {
 }
 
 export default function Dashboard() {
-  const [dashboardData, setDashboardData] = useState<Dashboard | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [productsSoldTimeFrame, setProductsSoldTimeFrame] = useState('7days');
+  const [revenueTimeFrame, setRevenueTimeFrame] = useState('7days');
+  const [completedOrdersTimeFrame, setCompletedOrdersTimeFrame] = useState('7days');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/dashboard`);
-        const dashboardData: Dashboard = response.data;
-        setDashboardData(dashboardData);
-
-        setTimeout(() => {
-          setDashboardData(dashboardData);
-          setLoading(false);
-        }, 1500);
-
+        const response = await axios.get<DashboardData>(`${API_BASE_URL}/dashboard`);
+        setDashboardData(response.data);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
+      } finally {
         setLoading(false);
       }
     };
     fetchDashboardData();
   }, []);
+
+  const getStatisticValue = (timeFrame: string, metric: string) => {
+    if (!dashboardData) return 0;
+    switch (timeFrame) {
+      case '24hours':
+        return dashboardData[`${metric}Last24Hours` as keyof DashboardData] as number;
+      case '30days':
+        return dashboardData[`${metric}Last30Days` as keyof DashboardData] as number;
+      case '7days':
+      default:
+        return dashboardData[`${metric}Last7Days` as keyof DashboardData] as number;
+    }
+  };
 
   if (loading || !dashboardData) {
     return (
@@ -58,10 +82,7 @@ export default function Dashboard() {
   }
 
   const {
-    productsSoldLast7Days,
-    totalRevenueLast7Days,
     pendingOrders,
-    completedOrdersLast7Days,
     totalRegisteredUsers,
     totalProducts,
     lowStockProducts,
@@ -69,87 +90,133 @@ export default function Dashboard() {
     topTagsUsed,
   } = dashboardData;
 
-  return (
-    <Layout>
-      <Navbar />
-      <div className="p-6 bg-gray-100 min-h-screen font-sans">
-        <Row gutter={[24, 24]} className="mb-6">
-          <Col xs={24} md={12} lg={8}>
-            <StatisticCard
-              title="Products Sold (7 Days)"
-              value={productsSoldLast7Days}
-            />
-          </Col>
-          <Col xs={24} md={12} lg={8}>
-            <StatisticCard
-              title="Total Revenue (7 Days)"
-              value={totalRevenueLast7Days}
-              precision={2}
-            />
-          </Col>
-          <Col xs={24} md={12} lg={8}>
-            <StatisticCard
-              title="Pending Orders"
-              value={pendingOrders}
-            />
-          </Col>
-          <Col xs={24} md={12} lg={8}>
-            <StatisticCard
-              title="Completed Orders (7 Days)"
-              value={completedOrdersLast7Days}
-            />
-          </Col>
-          <Col xs={24} md={12} lg={8}>
-            <StatisticCard
-              title="Total Registered Users"
-              value={totalRegisteredUsers}
-            />
-          </Col>
-          <Col xs={24} md={12} lg={8}>
-            <StatisticCard
-              title="Total Products"
-              value={totalProducts}
-            />
-          </Col>
-        </Row>
+  const getLabel = (timeFrame: string) => {
+    return timeFrame.replace('days', ' Days').replace('24hours', '24 Hours');
+  };
 
-        <Row gutter={[24, 24]}>
-          <Col xs={24} md={12}>
-            <Card title="Stock Alerts" className="h-full">
-              <List
-                header={<span className="font-semibold">Low Stock Products:</span>}
-                bordered={false}
-                dataSource={lowStockProducts}
-                renderItem={(item) => <List.Item>{item}</List.Item>}
-                locale={{ emptyText: 'All products are well-stocked!' }}
-              />
-              <List
-                header={<span className="font-semibold mt-4 block">Out of Stock Products:</span>}
-                bordered={false}
-                dataSource={outOfStockProducts}
-                renderItem={(item) => <List.Item>{item}</List.Item>}
-                locale={{ emptyText: 'No products are out of stock!' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} md={12}>
-            <Card title="Top Tags Used" className="h-full">
-              <div className="flex flex-wrap gap-2">
-                {topTagsUsed.length > 0 ? (
-                  topTagsUsed.map((tag, index) => (
-                    <Tag color={['magenta', 'red', 'volcano', 'orange', 'gold', 'lime', 'green', 'cyan', 'blue', 'geekblue', 'purple'][index % 11]} key={index}>
-                      {tag}
-                    </Tag>
-                  ))
-                ) : (
-                  <p className="text-gray-500">No tags have been used yet.</p>
-                )}
-              </div>
-            </Card>
-          </Col>
-        </Row>
+  return (
+    <div className="p-6 bg-gray-100 min-h-screen font-sans">
+      <div className="flex justify-between items-center mb-8">
+        <Title level={2} style={{ margin: 0 }}>Admin Dashboard</Title>
       </div>
-    </Layout>
+
+      {/* Main Stats Grid */}
+      <Row gutter={[24, 24]} className="mb-6">
+        <Col xs={24} md={12} lg={8}>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="m-0 text-base font-medium">Products Sold</h3>
+            <Select
+              defaultValue="7days"
+              style={{ width: 150 }}
+              onChange={setProductsSoldTimeFrame}
+            >
+              <Option value="24hours">Last 24 Hours</Option>
+              <Option value="7days">Last 7 Days</Option>
+              <Option value="30days">Last 30 Days</Option>
+            </Select>
+          </div>
+          <StatisticCard
+            title={`Products Sold (${getLabel(productsSoldTimeFrame)})`}
+            value={getStatisticValue(productsSoldTimeFrame, 'productsSold')}
+          />
+        </Col>
+
+        <Col xs={24} md={12} lg={8}>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="m-0 text-base font-medium">Total Revenue</h3>
+            <Select
+              defaultValue="7days"
+              style={{ width: 150 }}
+              onChange={setRevenueTimeFrame}
+            >
+              <Option value="24hours">Last 24 Hours</Option>
+              <Option value="7days">Last 7 Days</Option>
+              <Option value="30days">Last 30 Days</Option>
+            </Select>
+          </div>
+          <StatisticCard
+            title={`Total Revenue (${getLabel(revenueTimeFrame)})`}
+            value={getStatisticValue(revenueTimeFrame, 'totalRevenue')}
+            precision={2}
+          />
+        </Col>
+
+        <Col xs={24} md={12} lg={8}>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="m-0 text-base font-medium">Completed Orders</h3>
+            <Select
+              defaultValue="7days"
+              style={{ width: 150 }}
+              onChange={setCompletedOrdersTimeFrame}
+            >
+              <Option value="24hours">Last 24 Hours</Option>
+              <Option value="7days">Last 7 Days</Option>
+              <Option value="30days">Last 30 Days</Option>
+            </Select>
+          </div>
+          <StatisticCard
+            title={`Completed Orders (${getLabel(completedOrdersTimeFrame)})`}
+            value={getStatisticValue(completedOrdersTimeFrame, 'completedOrders')}
+          />
+        </Col>
+
+        <Col xs={24} md={12} lg={8}>
+          <StatisticCard
+            title="Pending Orders"
+            value={pendingOrders}
+          />
+        </Col>
+        <Col xs={24} md={12} lg={8}>
+          <StatisticCard
+            title="Total Registered Users"
+            value={totalRegisteredUsers}
+          />
+        </Col>
+        <Col xs={24} md={12} lg={8}>
+          <StatisticCard
+            title="Total Products"
+            value={totalProducts}
+          />
+        </Col>
+      </Row>
+
+      {/* Stock Alerts & Top Tags */}
+      <Row gutter={[24, 24]}>
+        <Col xs={24} md={12}>
+          <Card title="Stock Alerts" className="h-full">
+            <List
+              header={<span className="font-semibold">Low Stock Products:</span>}
+              bordered={false}
+              dataSource={lowStockProducts}
+              renderItem={(item) => <List.Item>{item}</List.Item>}
+              locale={{ emptyText: 'All products are well-stocked!' }}
+            />
+            <List
+              header={<span className="font-semibold mt-4 block">Out of Stock Products:</span>}
+              bordered={false}
+              dataSource={outOfStockProducts}
+              renderItem={(item) => <List.Item>{item}</List.Item>}
+              locale={{ emptyText: 'No products are out of stock!' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card title="Top Tags Used" className="h-full">
+            <div className="flex flex-wrap gap-2">
+              {topTagsUsed.length > 0 ? (
+                topTagsUsed.map((tag, index) => (
+                  <Tag color={['magenta', 'red', 'volcano', 'orange', 'gold', 'lime', 'green', 'cyan', 'blue', 'geekblue', 'purple'][index % 11]} key={index}>
+                    {tag}
+                  </Tag>
+                ))
+              ) : (
+                <p className="text-gray-500">No tags have been used yet.</p>
+              )}
+            </div>
+          </Card>
+        </Col>
+      </Row>
+    </div>
   );
 };
 

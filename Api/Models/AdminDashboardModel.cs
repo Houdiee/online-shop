@@ -28,8 +28,3 @@ public class AdminDashboardModel
   public required List<string> TopTagsUsed { get; set; }
 }
 
-public class DailySalesData
-{
-  public DateTime Date { get; set; }
-  public decimal Sales { get; set; }
-}

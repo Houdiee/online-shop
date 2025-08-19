@@ -19,6 +19,13 @@ public class DashboardController(ApiDbContext context) : ControllerBase
         DateTime sevenDaysAgo = now.AddDays(-7);
         DateTime thirtyDaysAgo = now.AddDays(-30);
 
+        var completedOrdersList = await _context.Orders
+            .Where(ords => ords.OrderedAt >= sevenDaysAgo && ords.Status == OrderStatus.Completed)
+            .ToListAsync();
+
+        Console.WriteLine($"DEBUG: Found {completedOrdersList.Count} completed orders in the last 7 days.");
+
+
         int productsSoldLast24Hours = await _context
             .Orders
             .CountAsync(ords => ords.OrderedAt >= yesterday && ords.Status == OrderStatus.Completed);
