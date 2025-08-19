@@ -26,5 +26,7 @@ public class AdminDashboardModel
   public required int TotalProducts { get; set; }
 
   public required List<string> TopTagsUsed { get; set; }
+
+  public required List<ProductModel> MostPopularProducts { get; set; }
 }
 
