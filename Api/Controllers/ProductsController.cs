@@ -1,8 +1,12 @@
 using Api.Data;
+using Api.Dtos.Product;
 using Api.Dtos.Products;
 using Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Api.Controllers;
 
@@ -47,13 +51,74 @@ public class ProductsController(ApiDbContext context) : ControllerBase
     }
   }
 
+  [HttpPut("{productId}")]
+  public async Task<IActionResult> UpdateProduct(int productId, [FromBody] UpdateProductRequest req)
+  {
+    ProductModel? product = await _context.Products
+        .Include(p => p.Variants)
+        .FirstOrDefaultAsync(p => p.Id == productId);
+
+    if (product == null)
+    {
+      return NotFound(new { message = $"Product with id {productId} not found" });
+    }
+
+    product.Name = req.Name;
+    product.Description = req.Description;
+    product.Tags = req.Tags;
+
+    var incomingVariantIds = req.Variants.Where(v => v.Id.HasValue).Select(v => v.Id!.Value).ToList();
+
+    var variantsToRemove = product.Variants.Where(v => !incomingVariantIds.Contains(v.Id)).ToList();
+    _context.ProductVariants.RemoveRange(variantsToRemove);
+
+    foreach (var incomingVariant in req.Variants)
+    {
+      if (incomingVariant.Id.HasValue)
+      {
+        var existingVariant = product.Variants.FirstOrDefault(v => v.Id == incomingVariant.Id.Value);
+        if (existingVariant != null)
+        {
+          existingVariant.Name = incomingVariant.Name;
+          existingVariant.Price = incomingVariant.Price;
+          existingVariant.DiscountedPrice = incomingVariant.DiscountedPrice;
+          existingVariant.StockQuantity = incomingVariant.StockQuantity;
+        }
+      }
+      else
+      {
+        var newVariant = new ProductVariantModel
+        {
+          ParentProductName = product.Name,
+          Name = incomingVariant.Name,
+          Price = incomingVariant.Price,
+          DiscountedPrice = incomingVariant.DiscountedPrice,
+          StockQuantity = incomingVariant.StockQuantity,
+          PhotoUrls = [],
+          CreatedAt = DateTime.UtcNow,
+        };
+        product.Variants.Add(newVariant);
+      }
+    }
+
+    try
+    {
+      await _context.SaveChangesAsync();
+      return Ok(product);
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine($"Error: {e}");
+      return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Failed to update product" });
+    }
+  }
+
   [HttpGet("{productId}")]
   public async Task<IActionResult> GetProductById(int productId)
   {
-
     ProductModel? product = await _context.Products
-      .Include(static p => p.Variants)
-      .FirstOrDefaultAsync(p => p.Id == productId);
+        .Include(static p => p.Variants)
+        .FirstOrDefaultAsync(p => p.Id == productId);
 
     if (product == null)
     {
@@ -106,14 +171,18 @@ public class ProductsController(ApiDbContext context) : ControllerBase
     return Ok(products);
   }
 
-  [HttpPost("images/{variantId}")]
-  public async Task<IActionResult> UploadVariantImages(int variantId, IFormFileCollection files)
+  [HttpPut("images/{variantId}")]
+  public async Task<IActionResult> ReplaceVariantImages(int variantId, IFormFileCollection files)
   {
     ProductVariantModel? variant = await _context.ProductVariants.FindAsync(variantId);
     if (variant == null)
     {
       return BadRequest(new { message = $"Variant with id {variantId} not found" });
     }
+
+    // Clear the old image URLs from the list
+    variant.PhotoUrls.Clear();
+
     string uploadDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
 
     if (!Directory.Exists(uploadDirectoryPath))
@@ -122,8 +191,8 @@ public class ProductsController(ApiDbContext context) : ControllerBase
     }
 
     List<string> uploadedPhotoUrls = [];
-
     string[] allowedExtensions = [".jpg", ".jpeg", ".png"];
+
     foreach (IFormFile file in files)
     {
       string fileExtension = Path.GetExtension(file.FileName);
@@ -165,6 +234,41 @@ public class ProductsController(ApiDbContext context) : ControllerBase
     {
       Console.WriteLine($"Error: {e}");
       return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An unexpected problem occurred" });
+    }
+  }
+
+  [HttpDelete("images/{variantId}/{fileName}")]
+  public async Task<IActionResult> DeleteVariantImage(int variantId, string fileName)
+  {
+    ProductVariantModel? variant = await _context.ProductVariants.FindAsync(variantId);
+    if (variant == null)
+    {
+      return NotFound(new { message = $"Variant with id {variantId} not found" });
+    }
+
+    string relativeUrlToRemove = $"/images/{fileName}";
+    bool wasRemoved = variant.PhotoUrls.Remove(relativeUrlToRemove);
+
+    if (!wasRemoved)
+    {
+      return NotFound(new { message = $"Image with file name {fileName} not found for this variant" });
+    }
+
+    string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
+    if (System.IO.File.Exists(filePath))
+    {
+      System.IO.File.Delete(filePath);
+    }
+
+    try
+    {
+      await _context.SaveChangesAsync();
+      return Ok(new { message = "Image deleted successfully" });
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine($"Error deleting image: {e}");
+      return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Failed to delete image" });
     }
   }
 

@@ -34,7 +34,6 @@ export default function ProductVariantsForm({ form }: ProductVariantsFormProps) 
   const [useSamePrices, setUseSamePrices] = useState<boolean>(false);
 
   useEffect(() => {
-    // Synchronize local state with form initial values
     const initialValues: FormValues = form.getFieldsValue(['useSameImages', 'useSamePrices']);
     setUseSameImages(initialValues.useSameImages || false);
     setUseSamePrices(initialValues.useSamePrices || false);
@@ -138,7 +137,8 @@ export default function ProductVariantsForm({ form }: ProductVariantsFormProps) 
                         label="Price ($)"
                         rules={[
                           { required: true, message: 'Please enter a price' },
-                          { type: 'number', min: 0.01, message: 'Price must be greater than 0' },
+                          { type: 'number', message: 'Price must be a valid number' },
+                          { type: 'number', min: 0.01, message: 'Price must be greater than 0' }
                         ]}
                       >
                         <InputNumber
@@ -191,7 +191,7 @@ export default function ProductVariantsForm({ form }: ProductVariantsFormProps) 
                         { required: true, message: 'Please upload at least one photo' },
                         {
                           validator: (_, value) => {
-                            if (value && value.length > 3) {
+                            if (value && value.length > 10) {
                               return Promise.reject(new Error('Maximum of 3 photos allowed'));
                             }
                             return Promise.resolve();

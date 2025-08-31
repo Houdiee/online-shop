@@ -13,8 +13,9 @@ function App() {
       <Route path="/products/:id/:variantId" element={<ProductDetails />} />
       <Route path="/admin/dashboard" element={<Dashboard />} />
       <Route path="/admin/create" element={<CreateProduct />} />
+      <Route path="/admin/edit/:productId" element={<CreateProduct />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

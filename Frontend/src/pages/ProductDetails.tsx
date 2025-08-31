@@ -1,4 +1,4 @@
-import { Breadcrumb, Col, Divider, Flex, Layout, Row, Space } from "antd";
+import { Breadcrumb, Col, Divider, Flex, Layout, Row, Space, Button } from "antd";
 import { useEffect, useState } from "react";
 import ProductImageCarousel from "../components/product-details/ProductImageCarousel";
 import AddToCartButton from "../components/product-details/AddToCartButton";
@@ -12,11 +12,13 @@ import { API_BASE_URL } from "../main";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { Content } from "antd/es/layout/layout";
+import { EditOutlined } from "@ant-design/icons";
 
 export default function ProductDetails() {
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [isAdmin, setIsAdmin] = useState(true);
 
   const { id, variantId } = useParams<{ id: string; variantId?: string }>();
   const navigate = useNavigate();
@@ -24,6 +26,10 @@ export default function ProductDetails() {
   const handleVariantSelect = (variant: ProductVariant) => {
     setSelectedVariant(variant);
     navigate(`/products/${id}/${variant.id}`);
+  };
+
+  const handleEditClick = () => {
+    navigate(`/admin/edit/${id}`);
   };
 
   useEffect(() => {
@@ -55,11 +61,9 @@ export default function ProductDetails() {
     <Layout>
       <Navbar />
       <Content className="!bg-white">
-
         <div className="px-4 py-8 md:px-8 lg:px-16 xl:px-24">
           <div className="max-w-screen-xl mx-auto">
             <Row gutter={[64, 24]} justify="center" align="stretch">
-
               {/* Left side (aka image) */}
               <Col xs={24} md={24} lg={12} xl={12}>
                 <Flex vertical className="h-full">
@@ -77,7 +81,19 @@ export default function ProductDetails() {
               {/* Right side (aka title, description, variant, etc.) */}
               <Col xs={24} md={24} lg={12} xl={12}>
                 <Flex vertical gap={10} className="h-full">
-                  <ProductInfo name={product.name} price={selectedVariant.price.toFixed()} tags={product.tags} />
+                  <Flex justify="space-between" align="center">
+                    <ProductInfo name={product.name} price={selectedVariant.price.toFixed()} tags={product.tags} />
+                    {isAdmin && (
+                      <Button
+                        type="primary"
+                        icon={<EditOutlined />}
+                        onClick={handleEditClick}
+                        className="!bg-green-500 hover:!bg-green-600 !text-white !border-green-500"
+                      >
+                        Edit
+                      </Button>
+                    )}
+                  </Flex>
 
                   <Divider className="!mb-0" />
 

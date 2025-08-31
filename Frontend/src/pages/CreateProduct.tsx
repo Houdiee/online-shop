@@ -7,20 +7,27 @@ import {
   message,
   Divider,
 } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { Easing } from 'framer-motion';
 import axios from 'axios';
+import type { UploadFile } from 'antd/es/upload/interface';
 
 import GeneralDetailsForm from '../components/create-product/GeneralDetailsForm';
 import ProductVariantsForm from '../components/create-product/ProductVariantsForm';
 import Navbar from '../components/Navbar';
+import type { Product, ProductVariant } from '../types/product';
+
+interface FormVariant extends Omit<ProductVariant, 'id' | 'photoUrls'> {
+  id?: number;
+  photoUrls?: UploadFile[];
+}
 
 interface FormProduct {
   name: string;
   description: string | null;
   tags: string[];
-  variants: any[];
+  variants: FormVariant[];
   newTag?: string;
   useSameImages?: boolean;
   useSamePrices?: boolean;
@@ -32,28 +39,57 @@ const cardVariants = {
 };
 
 export default function CreateProduct() {
+  const { productId } = useParams<{ productId: string }>();
   const [form] = Form.useForm<FormProduct>();
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState<boolean>(!!productId);
   const navigate = useNavigate();
 
   const [availableTags, setAvailableTags] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchTags = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/tags');
-        const fetchedTags = response.data.map((tag: string) => ({
+        if (productId) {
+          setLoading(true);
+          const productResponse = await axios.get<Product>(`http://localhost:5000/Products/${productId}`);
+          const productData = productResponse.data;
+
+          const formattedVariants = productData.variants.map(variant => ({
+            ...variant,
+            photoUrls: (variant.photoUrls || []).map((url, index) => ({
+              uid: `${variant.id}-${index}`,
+              name: `image-${index}.png`,
+              status: 'done' as 'done',
+              url: url,
+            })),
+          }));
+
+          form.setFieldsValue({
+            name: productData.name,
+            description: productData.description,
+            tags: productData.tags,
+            variants: formattedVariants,
+          });
+          message.success('Product details loaded for editing.');
+        }
+
+        const tagsResponse = await axios.get('http://localhost:5000/tags');
+        const fetchedTags = tagsResponse.data.map((tag: string) => ({
           value: tag,
           label: tag,
         }));
         setAvailableTags(fetchedTags);
+
       } catch (error) {
-        console.error('Failed to fetch tags:', error);
-        message.error('Failed to load available tags.');
+        console.error('Failed to fetch data:', error);
+        message.error('Failed to load product details or tags.');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchTags();
-  }, []);
+    fetchData();
+  }, [productId, form]);
 
   const onFinish = async (values: FormProduct) => {
     setSubmitting(true);
@@ -69,11 +105,12 @@ export default function CreateProduct() {
         return;
       }
 
-      const productToCreate = {
+      const productToSave = {
         name: values.name,
         description: values.description,
         tags: Array.from(allTags),
-        variants: values.variants.map((v) => ({
+        variants: values.variants.map((v: any) => ({
+          id: v.id,
           name: v.name,
           price: v.price,
           discountedPrice: v.discountedPrice,
@@ -81,56 +118,65 @@ export default function CreateProduct() {
         })),
       };
 
-      const productResponse = await axios.post('http://localhost:5000/Products', productToCreate);
-      const newProduct = productResponse.data;
+      let productResponse;
+      if (productId) {
+        productResponse = await axios.put(`http://localhost:5000/Products/${productId}`, productToSave);
+      } else {
+        productResponse = await axios.post('http://localhost:5000/Products', productToSave);
+      }
 
-      let photoPromises: Promise<any>[] = [];
+      const savedProduct = productResponse.data;
+
+      const photoPromises: Promise<any>[] = [];
       const useSameImages = form.getFieldValue('useSameImages');
 
       if (useSameImages) {
         const firstVariantData = values.variants[0];
-        if (firstVariantData?.photoUrls?.length > 0) {
-          const variantId = newProduct.variants[0].id;
-          if (!variantId) throw new Error('Variant ID not found for the first variant');
+        const newFilesToUpload = firstVariantData.photoUrls?.filter(file => !file.url) || [];
+        if (newFilesToUpload.length > 0) {
+          const variantId = savedProduct.variants[0].id;
           const formData = new FormData();
-          firstVariantData.photoUrls.forEach((file) => {
+          newFilesToUpload.forEach((file) => {
             if (file.originFileObj) {
               formData.append('files', file.originFileObj, file.name);
             }
           });
-          photoPromises = newProduct.variants.map((variant: any) =>
-            axios.post(`http://localhost:5000/Products/images/${variant.id}`, formData, {
-              headers: { 'Content-Type': 'multipart/form-data' },
-            })
+          photoPromises.push(
+            ...savedProduct.variants.map((variant: any) =>
+              axios.put(`http://localhost:5000/Products/images/${variant.id}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+              })
+            )
           );
         }
       } else {
-        photoPromises = values.variants.map(async (variantData, index) => {
-          if (variantData?.photoUrls?.length > 0) {
-            const variantId = newProduct.variants[index].id;
-            if (!variantId) throw new Error(`Variant ID not found for index ${index}`);
+        values.variants.forEach((variantData, index) => {
+          const newFilesToUpload = variantData.photoUrls?.filter(file => !file.url) || [];
+          if (newFilesToUpload.length > 0) {
+            const variantId = savedProduct.variants[index].id;
             const formData = new FormData();
-            variantData.photoUrls.forEach((file) => {
+            newFilesToUpload.forEach((file) => {
               if (file.originFileObj) {
                 formData.append('files', file.originFileObj, file.name);
               }
             });
-            return axios.post(`http://localhost:5000/Products/images/${variantId}`, formData, {
-              headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            photoPromises.push(
+              axios.put(`http://localhost:5000/Products/images/${variantId}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+              })
+            );
           }
-          return Promise.resolve();
         });
       }
 
       await Promise.all(photoPromises);
 
-      message.success('Product created successfully!');
+      message.success(`Product ${productId ? 'updated' : 'created'} successfully!`);
       form.resetFields();
       navigate('/');
     } catch (error) {
-      console.error('Failed to create product or upload images:', error);
-      message.error('Failed to create product. Please check the form data.');
+      console.error(`Failed to ${productId ? 'update' : 'create'} product or upload images:`, error);
+      message.error(`Failed to ${productId ? 'update' : 'create'} product. Please check the form data.`);
     } finally {
       setSubmitting(false);
     }
@@ -147,8 +193,9 @@ export default function CreateProduct() {
           variants={cardVariants}
         >
           <Card
-            title={<h1 className="text-2xl font-bold text-gray-800">Create a New Product</h1>}
+            title={<h1 className="text-2xl font-bold text-gray-800">{productId ? 'Edit Product' : 'Create a New Product'}</h1>}
             className="rounded-xl shadow-lg border-none bg-gray-50"
+            loading={loading}
           >
             <Form
               form={form}
@@ -169,7 +216,7 @@ export default function CreateProduct() {
                   loading={submitting}
                   className="!h-12 !text-lg !font-semibold !rounded-lg"
                 >
-                  {submitting ? 'Creating Product...' : 'Create Product'}
+                  {submitting ? (productId ? 'Updating Product...' : 'Creating Product...') : (productId ? 'Update Product' : 'Create Product')}
                 </Button>
               </Form.Item>
             </Form>
