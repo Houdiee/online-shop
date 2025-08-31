@@ -26,6 +26,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
         Name = v.Name,
         Price = v.Price,
         StockQuantity = v.StockQuantity,
+        DiscountedPrice = v.DiscountedPrice,
         PhotoUrls = [],
         CreatedAt = DateTime.UtcNow,
       }).ToList(),

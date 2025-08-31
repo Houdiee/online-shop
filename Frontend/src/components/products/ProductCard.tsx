@@ -28,10 +28,23 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Flex vertical>
             <Typography.Text strong className="!text-md">{product.name}</Typography.Text>
             <Typography.Text type="secondary">{productVariantCount} options</Typography.Text>
-            <Typography.Text className="!text-md">${defaultVariant.price}</Typography.Text>
+            <Flex align="center" gap={4}>
+              {defaultVariant.discountedPrice ? (
+                <>
+                  <Typography.Text className="!text-md !font-bold !text-red-500">
+                    ${defaultVariant.discountedPrice}
+                  </Typography.Text>
+                  <Typography.Text delete type="secondary" className="!text-sm">
+                    ${defaultVariant.price}
+                  </Typography.Text>
+                </>
+              ) : (
+                <Typography.Text className="!text-md">${defaultVariant.price}</Typography.Text>
+              )}
+            </Flex>
           </Flex>
         </Flex>
-      </Card >
+      </Card>
     </Link>
   );
 }

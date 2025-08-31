@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Layout,
   Card,
@@ -13,6 +13,8 @@ import {
   Col,
   Divider,
   Space,
+  Checkbox,
+  Flex,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +22,7 @@ import type { UploadFile } from 'antd/es/upload/interface';
 import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion';
 import type { Easing } from 'framer-motion';
+import axios from 'axios';
 
 interface FormVariant {
   name: string;
@@ -34,61 +37,155 @@ interface FormProduct {
   description: string | null;
   tags: string[];
   variants: FormVariant[];
+  newTag?: string;
+  useSameImages?: boolean;
+  useSamePrices?: boolean;
 }
 
 export default function CreateProduct() {
   const [form] = Form.useForm<FormProduct>();
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const [useSameImages, setUseSameImages] = useState(false);
+  const [useSamePrices, setUseSamePrices] = useState(false);
 
-  const uploadPhoto = async (file: UploadFile): Promise<string> => {
-    return new Promise((resolve) => {
-      console.log('Simulating file upload for:', file.name);
-      setTimeout(() => {
-        resolve(`https://placehold.co/400x400/1890ff/ffffff?text=${encodeURIComponent(file.name)}`);
-      }, 500);
-    });
-  };
+  const [availableTags, setAvailableTags] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/tags');
+        const fetchedTags = response.data.map((tag: string) => ({
+          value: tag,
+          label: tag,
+        }));
+        setAvailableTags(fetchedTags);
+      } catch (error) {
+        console.error('Failed to fetch tags:', error);
+        message.error('Failed to load available tags.');
+      }
+    };
+    fetchTags();
+  }, []);
 
   const onFinish = async (values: FormProduct) => {
     setSubmitting(true);
     try {
-      const processedVariants = await Promise.all(values.variants.map(async (variant) => {
-        const photoUrls = await Promise.all(variant.photoUrls.map(async (file) => {
-          if (file.url) {
-            return file.url;
-          }
-          return uploadPhoto(file);
-        }));
+      const allTags = new Set([...(values.tags || [])]);
+      if (values.newTag) {
+        allTags.add(values.newTag);
+      }
 
-        return {
-          ...variant,
-          photoUrls,
-        };
-      }));
+      // Check if both 'tags' and 'newTag' are empty
+      if (allTags.size === 0) {
+        message.error('Please select at least one existing tag or create a new one.');
+        setSubmitting(false);
+        return;
+      }
 
-      const productData = {
-        ...values,
-        variants: processedVariants,
+      const finalVariants = values.variants.map((variant, index) => {
+        if (useSamePrices && index > 0) {
+          const firstVariant = values.variants[0];
+          return {
+            ...variant,
+            price: firstVariant.price,
+            discountedPrice: firstVariant.discountedPrice,
+          };
+        }
+        return variant;
+      });
+
+      const productToCreate = {
+        name: values.name,
+        description: values.description,
+        tags: Array.from(allTags), // Convert Set back to Array for submission
+        variants: finalVariants.map((v) => ({
+          name: v.name,
+          price: v.price,
+          discountedPrice: v.discountedPrice,
+          stockQuantity: v.stockQuantity,
+        })),
       };
 
-      console.log('Final product data to be sent:', productData);
+      const productResponse = await axios.post('http://localhost:5000/Products', productToCreate);
+      const newProduct = productResponse.data;
 
-      // In a real application, you would make the API call here
-      // const response = await axios.post('/api/products', productData);
-      // console.log('Product created successfully:', response.data);
+      let photoPromises: Promise<any>[] = [];
+      if (useSameImages) {
+        const firstVariantData = values.variants[0];
+        const variantId = newProduct.variants[0].id;
+
+        if (!variantId) {
+          throw new Error('Variant ID not found for the first variant');
+        }
+
+        const formData = new FormData();
+        firstVariantData.photoUrls.forEach((file) => {
+          if (file.originFileObj) {
+            formData.append('files', file.originFileObj, file.name);
+          }
+        });
+
+        if (firstVariantData.photoUrls.length > 0) {
+          photoPromises = newProduct.variants.map((variant: any) =>
+            axios.post(`http://localhost:5000/Products/images/${variant.id}`, formData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            })
+          );
+        }
+      } else {
+        photoPromises = values.variants.map(async (variantData, index) => {
+          const variantId = newProduct.variants[index].id;
+          if (!variantId) {
+            throw new Error(`Variant ID not found for index ${index}`);
+          }
+
+          const formData = new FormData();
+          variantData.photoUrls.forEach((file) => {
+            if (file.originFileObj) {
+              formData.append('files', file.originFileObj, file.name);
+            }
+          });
+
+          if (variantData.photoUrls.length > 0) {
+            return axios.post(`http://localhost:5000/Products/images/${variantId}`, formData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
+          }
+        });
+      }
+
+      await Promise.all(photoPromises);
 
       message.success('Product created successfully!');
       form.resetFields();
       navigate('/');
-
     } catch (error) {
-      console.error('Failed to create product:', error);
+      console.error('Failed to create product or upload images:', error);
       message.error('Failed to create product. Please check the form data.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (useSamePrices) {
+      const formValues = form.getFieldsValue();
+      const firstVariantPrices = {
+        price: formValues.variants?.[0]?.price,
+        discountedPrice: formValues.variants?.[0]?.discountedPrice,
+      };
+
+      if (formValues.variants) {
+        formValues.variants.forEach((_, index) => {
+          if (index > 0) {
+            form.setFieldValue(['variants', index, 'price'], firstVariantPrices.price);
+            form.setFieldValue(['variants', index, 'discountedPrice'], firstVariantPrices.discountedPrice);
+          }
+        });
+      }
+    }
+  }, [useSamePrices, form.getFieldsValue().variants?.[0]?.price, form.getFieldsValue().variants?.[0]?.discountedPrice]);
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -119,7 +216,7 @@ export default function CreateProduct() {
               layout="vertical"
               onFinish={onFinish}
               autoComplete="off"
-              initialValues={{ variants: [{}] }} // Ensure at least one variant is present
+              initialValues={{ variants: [{}] }}
             >
               <div className="bg-white p-6 rounded-lg mb-6 border border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-700 mb-4">General Product Details</h2>
@@ -142,18 +239,38 @@ export default function CreateProduct() {
                     <motion.div variants={formItemVariants}>
                       <Form.Item
                         name="tags"
-                        label="Tags (Max 5)"
+                        label="Existing Tags (Max 5)"
                         rules={[
-                          { required: true, message: 'Please select at least one tag' },
+                          // Removed the required rule here
                           { type: 'array', max: 5, message: 'Maximum of 5 tags allowed' },
+                          // Added the custom validator
+                          ({ getFieldValue }) => ({
+                            validator(_, value) {
+                              const newTag = getFieldValue('newTag');
+                              if (!value?.length && !newTag) {
+                                return Promise.reject(new Error('Please select at least one existing tag or create a new one.'));
+                              }
+                              return Promise.resolve();
+                            },
+                          }),
                         ]}
                       >
                         <Select
-                          mode="tags"
-                          placeholder="e.g., electronics, audio"
+                          mode="multiple"
+                          placeholder="Select existing tags"
                           size="large"
                           className="w-full"
+                          options={availableTags}
                         />
+                      </Form.Item>
+                      <Form.Item
+                        name="newTag"
+                        label="New Tag Name (Optional)"
+                        rules={[
+                          { max: 50, message: 'Tag name is too long' },
+                        ]}
+                      >
+                        <Input placeholder="e.g., new-product-line" />
                       </Form.Item>
                     </motion.div>
                   </Col>
@@ -174,6 +291,24 @@ export default function CreateProduct() {
               <Divider className="my-8" />
 
               <h2 className="text-lg font-semibold text-gray-700 mb-4">Product Variants</h2>
+              <Flex vertical>
+                <Form.Item name="useSameImages" valuePropName="checked" noStyle>
+                  <Checkbox
+                    onChange={(e) => setUseSameImages(e.target.checked)}
+                    className="!mb-4 text-gray-600 mr-4"
+                  >
+                    Use same images for all variants
+                  </Checkbox>
+                </Form.Item>
+                <Form.Item name="useSamePrices" valuePropName="checked" noStyle>
+                  <Checkbox
+                    onChange={(e) => setUseSamePrices(e.target.checked)}
+                    className="!mb-4 text-gray-600"
+                  >
+                    Use same prices for all variants
+                  </Checkbox>
+                </Form.Item>
+              </Flex>
               <Form.List
                 name="variants"
               >
@@ -254,7 +389,7 @@ export default function CreateProduct() {
                                   className="w-full"
                                   placeholder="e.g., 99.99"
                                   formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                  parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as unknown as number}
+                                  disabled={useSamePrices && index > 0}
                                 />
                               </Form.Item>
                             </Col>
@@ -280,48 +415,50 @@ export default function CreateProduct() {
                                   className="w-full"
                                   placeholder="Optional"
                                   formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                  parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as unknown as number}
+                                  disabled={useSamePrices && index > 0}
                                 />
                               </Form.Item>
                             </Col>
                           </Row>
 
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'photoUrls']}
-                            label="Photos"
-                            valuePropName="fileList"
-                            getValueFromEvent={(e) => {
-                              if (Array.isArray(e)) {
-                                return e;
-                              }
-                              return e?.fileList;
-                            }}
-                            rules={[
-                              { required: true, message: 'Please upload at least one photo' },
-                              {
-                                validator: (_, value) => {
-                                  if (value && value.length > 3) {
-                                    return Promise.reject(new Error('Maximum of 3 photos allowed'));
-                                  }
-                                  return Promise.resolve();
+                          {(!useSameImages || index === 0) && (
+                            <Form.Item
+                              {...restField}
+                              name={[name, 'photoUrls']}
+                              label="Photos"
+                              valuePropName="fileList"
+                              getValueFromEvent={(e) => {
+                                if (Array.isArray(e)) {
+                                  return e;
                                 }
-                              }
-                            ]}
-                          >
-                            <Upload
-                              name="photo"
-                              listType="picture-card"
-                              multiple
-                              maxCount={3}
-                              beforeUpload={() => false}
+                                return e?.fileList;
+                              }}
+                              rules={[
+                                { required: true, message: 'Please upload at least one photo' },
+                                {
+                                  validator: (_, value) => {
+                                    if (value && value.length > 3) {
+                                      return Promise.reject(new Error('Maximum of 3 photos allowed'));
+                                    }
+                                    return Promise.resolve();
+                                  }
+                                }
+                              ]}
                             >
-                              <div>
-                                <PlusOutlined />
-                                <div className="mt-2 text-xs">Upload</div>
-                              </div>
-                            </Upload>
-                          </Form.Item>
+                              <Upload
+                                name="photo"
+                                listType="picture-card"
+                                multiple
+                                maxCount={3}
+                                beforeUpload={() => false}
+                              >
+                                <div>
+                                  <PlusOutlined />
+                                  <div className="mt-2 text-xs">Upload</div>
+                                </div>
+                              </Upload>
+                            </Form.Item>
+                          )}
                         </Card>
                       </motion.div>
                     ))}
