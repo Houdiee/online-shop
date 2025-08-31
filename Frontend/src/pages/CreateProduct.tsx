@@ -6,8 +6,9 @@ import {
   Button,
   message,
   Divider,
+  notification,
 } from 'antd';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { Easing } from 'framer-motion';
 import axios from 'axios';
@@ -44,6 +45,8 @@ export default function CreateProduct() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState<boolean>(!!productId);
   const navigate = useNavigate();
+
+  const [api, contextHolder] = notification.useNotification();
 
   const [availableTags, setAvailableTags] = useState<any[]>([]);
 
@@ -134,7 +137,6 @@ export default function CreateProduct() {
         const firstVariantData = values.variants[0];
         const newFilesToUpload = firstVariantData.photoUrls?.filter(file => !file.url) || [];
         if (newFilesToUpload.length > 0) {
-          const variantId = savedProduct.variants[0].id;
           const formData = new FormData();
           newFilesToUpload.forEach((file) => {
             if (file.originFileObj) {
@@ -171,12 +173,19 @@ export default function CreateProduct() {
 
       await Promise.all(photoPromises);
 
-      message.success(`Product ${productId ? 'updated' : 'created'} successfully!`);
-      form.resetFields();
-      navigate('/');
+      api.success({
+        message: 'Success',
+        description: `Product has been successfully ${productId ? 'updated' : 'created'}.`,
+        placement: 'bottomRight',
+      });
+
     } catch (error) {
       console.error(`Failed to ${productId ? 'update' : 'create'} product or upload images:`, error);
-      message.error(`Failed to ${productId ? 'update' : 'create'} product. Please check the form data.`);
+      api.error({
+        message: 'Error',
+        description: `Failed to ${productId ? 'update' : 'create'} product. Please check the form data.`,
+        placement: 'bottomRight',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -184,6 +193,7 @@ export default function CreateProduct() {
 
   return (
     <Layout className="bg-gray-100 min-h-screen font-sans">
+      {contextHolder}
       <Navbar />
       <div className="p-8 lg:p-12 w-full flex justify-center items-center">
         <motion.div

@@ -113,6 +113,57 @@ public class ProductsController(ApiDbContext context) : ControllerBase
     }
   }
 
+  // 💡 New endpoint to delete a product and its images
+  [HttpDelete("{productId}")]
+  public async Task<IActionResult> DeleteProduct(int productId)
+  {
+    ProductModel? product = await _context.Products
+        .Include(p => p.Variants) // 💡 Include variants to access image URLs
+        .FirstOrDefaultAsync(p => p.Id == productId);
+
+    if (product == null)
+    {
+      return NotFound(new { message = $"Product with id {productId} not found" });
+    }
+
+    // Delete all images associated with the product's variants
+    foreach (var variant in product.Variants)
+    {
+      foreach (var relativeUrl in variant.PhotoUrls)
+      {
+        string fileName = Path.GetFileName(relativeUrl);
+        string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
+
+        if (System.IO.File.Exists(filePath))
+        {
+          try
+          {
+            System.IO.File.Delete(filePath);
+          }
+          catch (IOException e)
+          {
+            Console.WriteLine($"Error deleting image file {filePath}: {e}");
+            // Continue even if a file can't be deleted to clean up the rest
+          }
+        }
+      }
+    }
+
+    // Remove the product from the database
+    _context.Products.Remove(product);
+
+    try
+    {
+      await _context.SaveChangesAsync();
+      return Ok(new { message = "Product and associated images deleted successfully" });
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine($"Error deleting product: {e}");
+      return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Failed to delete product" });
+    }
+  }
+
   [HttpGet("{productId}")]
   public async Task<IActionResult> GetProductById(int productId)
   {
