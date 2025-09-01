@@ -1,4 +1,4 @@
-import { Col, Flex, Layout, Row, Space, Typography } from "antd";
+import { Col, Flex, Layout, notification, Row, Space, Typography } from "antd";
 import ProductCard from "../components/products/ProductCard";
 import { type Product } from "../types/product";
 import FilterMenu from "../components/products/FilterMenu";
@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../main";
 import Navbar from "../components/Navbar";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { Content } from "antd/es/layout/layout";
 import Fuse from "fuse.js";
 
@@ -22,6 +22,21 @@ export default function Products() {
   const [maxPriceRange, setMaxPriceRange] = useState<number>(1000);
   const [selectedTags, setSelectedTags] = useState<string[]>(searchParams.getAll("tags") || []);
   const [searchValue, setSearchValue] = useState<string>("");
+
+  const [api, contextHolder] = notification.useNotification();
+
+  const location = useLocation();
+  useEffect(() => {
+    if (location.state?.productDeleted) {
+      api.success({
+        message: 'Deleted',
+        description: 'Product has been successfully deleted.',
+        placement: 'bottomRight',
+      });
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, api]);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,12 +137,13 @@ export default function Products() {
 
   return (
     <Layout>
+      {contextHolder}
       <Space direction="vertical" size="small">
         <Navbar
           productsData={products}
         />
 
-        <Content>
+        <Content className="h-screen">
           <Flex vertical>
             <Row gutter={[15, 15]}>
               <Col xs={24} md={7} lg={7} xl={5}>

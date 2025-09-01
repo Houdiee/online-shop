@@ -1,4 +1,4 @@
-import { Breadcrumb, Col, Divider, Flex, Layout, Row, Space, Button, Popconfirm, notification } from "antd"; // 💡 Import Popconfirm and notification
+import { Breadcrumb, Col, Divider, Flex, Layout, Row, Space, Button, Popconfirm, notification } from "antd";
 import { useEffect, useState } from "react";
 import ProductImageCarousel from "../components/product-details/ProductImageCarousel";
 import AddToCartButton from "../components/product-details/AddToCartButton";
@@ -12,7 +12,7 @@ import { API_BASE_URL } from "../main";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { Content } from "antd/es/layout/layout";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons"; // 💡 Import DeleteOutlined
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 export default function ProductDetails() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -20,7 +20,7 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [isAdmin, setIsAdmin] = useState(true);
 
-  const [api, contextHolder] = notification.useNotification(); // 💡 Add notification hook
+  const [api, contextHolder] = notification.useNotification();
 
   const { id, variantId } = useParams<{ id: string; variantId?: string }>();
   const navigate = useNavigate();
@@ -37,12 +37,7 @@ export default function ProductDetails() {
   const handleDelete = async () => {
     try {
       await axios.delete(`http://localhost:5000/products/${id}`);
-      api.success({
-        message: 'Deleted',
-        description: 'Product has been successfully deleted.',
-        placement: 'bottomRight',
-      });
-      navigate('/products');
+      navigate('/products', { state: { productDeleted: true } });
     } catch (error) {
       console.error('Failed to delete product:', error);
       api.error({
@@ -80,7 +75,7 @@ export default function ProductDetails() {
 
   return (
     <Layout>
-      {contextHolder} {/* 💡 Add context holder */}
+      {contextHolder}
       <Navbar />
       <Content className="!bg-white">
         <div className="px-4 py-8 md:px-8 lg:px-16 xl:px-24">
@@ -106,7 +101,7 @@ export default function ProductDetails() {
                   <Flex justify="space-between" align="center">
                     <ProductInfo name={product.name} price={selectedVariant.price.toFixed()} tags={product.tags} />
                     {isAdmin && (
-                      <Space> {/* 💡 Wrap buttons in a Space component for proper spacing */}
+                      <Space>
                         <Button
                           type="primary"
                           icon={<EditOutlined />}
@@ -156,3 +151,4 @@ export default function ProductDetails() {
     </Layout>
   );
 }
+
