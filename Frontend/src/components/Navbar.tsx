@@ -99,16 +99,27 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
     }
   };
 
-  let isAdmin = false;
-  if (user.role === "admin") {
-    isAdmin = true;
-  }
-
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       const newSearchParam = searchValue ? `?search=${searchValue}` : '';
       navigate({ search: newSearchParam });
       setOptions([]);
+    }
+  };
+
+  const handleCartClick = () => {
+    if (!user) {
+      navigate('/login');
+    } else {
+      setIsSidebarOpen(true);
+    }
+  };
+
+  const handleAccountClick = () => {
+    if (!user) {
+      navigate('/login');
+    } else {
+      navigate('/account');
     }
   };
 
@@ -120,7 +131,7 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
           mode="horizontal"
           className="flex-1 min-w-0 border-b-0 !p-0 !h-auto"
         >
-          {isAdmin && (<Menu.Item key="create-product">
+          {user?.role === "admin" && (<Menu.Item key="create-product">
             <Link to="/admin/dashboard">
               Dashboard
             </Link>
@@ -150,18 +161,16 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
           mode="horizontal"
           className="flex-1 min-w-0 border-b-0 !p-0 !h-auto justify-end"
         >
-          {isAdmin && (<Menu.Item key="create-product">
+          {user?.role === "admin" && (<Menu.Item key="create-product">
             <Link to="/admin/create">
               <PlusOutlined /> Create New
             </Link>
           </Menu.Item>)}
 
-          <Menu.Item key="account">
-            <Link to="/account">
-              <UserOutlined /> Account
-            </Link>
+          <Menu.Item key="account" onClick={handleAccountClick}>
+            <UserOutlined /> Account
           </Menu.Item>
-          <Menu.Item key="cart" onClick={() => setIsSidebarOpen(true)}>
+          <Menu.Item key="cart" onClick={handleCartClick}>
             <ShoppingCartOutlined /> Cart
           </Menu.Item>
         </Menu>
@@ -175,3 +184,4 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
     </>
   );
 }
+

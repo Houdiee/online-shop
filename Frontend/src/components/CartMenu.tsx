@@ -20,7 +20,7 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/users/${user.id}`);
+        const response = await axios.get(`${API_BASE_URL}/users/${user!.id}`);
         const userData: User = response.data;
         const cartData: ShoppingCart = userData.shoppingCart;
         setCart(cartData);
@@ -29,10 +29,10 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
       }
     };
 
-    if (!shoppingCartData) {
+    if (user && !shoppingCartData) {
       fetchCart();
     } else {
-      setCart(shoppingCartData);
+      setCart(shoppingCartData || null);
     }
   }, [shoppingCartData]);
 
@@ -80,10 +80,10 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
       {/* Main sidebar content */}
       <div
         className={`
-            fixed top-0 right-0 h-full max-w-sm w-full bg-white shadow-lg
-            p-6 z-50 transition-transform duration-300
-            ease-in-out transform flex flex-col
-            ${isOpen ? 'translate-x-0' : 'translate-x-full'
+          fixed top-0 right-0 h-full max-w-sm w-full bg-white shadow-lg
+          p-6 z-50 transition-transform duration-300
+          ease-in-out transform flex flex-col
+          ${isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
         {/* Header */}

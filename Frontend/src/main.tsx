@@ -6,19 +6,7 @@ import App from './App'
 import { App as AntdApp } from 'antd';
 import type { User } from './types/user';
 
-export const user: User = {
-  id: 1,
-  email: "kerimugurlu24@gmail.com",
-  firstName: "Kerim",
-  lastName: "Kerim",
-  role: "admin",
-  shoppingCart: {
-    id: 1,
-    items: [],
-    totalCost: 0,
-  },
-  orders: [],
-};
+export const user: User | null = null;
 
 export const API_BASE_URL = "http://localhost:5000";
 
