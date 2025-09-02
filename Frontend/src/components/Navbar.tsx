@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import type { Product } from "../types/product";
 import axios from "axios";
 import { Header } from "antd/es/layout/layout";
@@ -6,9 +6,10 @@ import { AutoComplete, Flex, Input, Menu, Space, Typography } from "antd";
 import { PlusOutlined, ShoppingCartOutlined, UserOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Fuse from "fuse.js";
-import { API_BASE_URL, user } from "../main";
+import { API_BASE_URL } from "../main";
 import CartMenu from "./CartMenu";
 import type { ShoppingCart } from "../types/shopping-cart";
+import { UserContext } from "../contexts/UserContext";
 
 interface NavbarProps {
   productsData?: Product[];
@@ -16,6 +17,7 @@ interface NavbarProps {
 };
 
 export default function Navbar({ productsData, shoppingCartData }: NavbarProps) {
+  const { user } = useContext(UserContext);
   const [searchValue, setSearchValue] = useState<string>("");
   const [options, setOptions] = useState<{ value: string }[]>([]);
   const [products, setProducts] = useState<Product[]>([]);

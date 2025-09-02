@@ -1,6 +1,8 @@
 import { Form, InputNumber } from "antd";
 import axios from "axios";
-import { API_BASE_URL, user } from "../../main";
+import { API_BASE_URL } from "../../main";
+import { useContext } from "react";
+import { UserContext } from "../../contexts/UserContext";
 
 type QuantitySelectorProps = {
   quantity: number;
@@ -12,11 +14,13 @@ type QuantitySelectorProps = {
 };
 
 export default function QuantitySelector({ quantity, onQuantityChange, itemId, isInCart, hideLabel, className }: QuantitySelectorProps) {
+  const { user } = useContext(UserContext);
+
   const handleQuantityChange = (value: number | null) => {
     const newQuantity = value || 1;
     onQuantityChange(newQuantity);
 
-    if (isInCart && itemId) {
+    if (isInCart && itemId && user) {
       axios.patch(`${API_BASE_URL}/users/${user.id}/shoppingcart/${itemId}`, {
         quantity: newQuantity,
       });

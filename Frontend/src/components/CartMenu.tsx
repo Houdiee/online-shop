@@ -1,11 +1,12 @@
 import { CloseOutlined } from "@ant-design/icons";
 import { Button, Divider, Flex, Image, Space, Typography } from "antd";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import type { ShoppingCart } from "../types/shopping-cart";
 import axios from "axios";
-import { API_BASE_URL, user } from "../main";
+import { API_BASE_URL } from "../main";
 import type { User } from "../types/user";
 import QuantitySelector from "./product-details/QuantitySelector";
+import { UserContext } from "../contexts/UserContext";
 
 interface CartMenuProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface CartMenuProps {
 }
 
 export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenuProps) {
+  const { user } = useContext(UserContext);
   const [cart, setCart] = useState<ShoppingCart | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 

@@ -5,11 +5,12 @@ import AccountDetails from './pages/AccountDetails.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import CreateProduct from './pages/CreateProduct.tsx';
 import LoginPage from './pages/Login.tsx';
-import { user } from './main.tsx';
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
+import { UserContext } from './contexts/UserContext.tsx';
 
 const ProtectedRoute = ({ children }: any) => {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {

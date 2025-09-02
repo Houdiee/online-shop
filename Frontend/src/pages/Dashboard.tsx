@@ -57,7 +57,7 @@ interface DashboardData {
   mostPopularProducts: MostPopularProductStats[];
 }
 
-const DashboardStatisticCard = ({ title, timeFrame, setTimeFrame, value, precision = 0 }) => {
+const DashboardStatisticCard = ({ title, timeFrame, setTimeFrame, value, precision = 0 }: { title: string }) => {
   const getLabel = (timeFrame: string) => {
     return timeFrame.replace('days', ' Days').replace('24hours', '24 Hours');
   };

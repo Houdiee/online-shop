@@ -138,6 +138,22 @@ public class UsersController(ApiDbContext context, IResend resend) : ControllerB
     return Ok(user);
   }
 
+  [HttpGet("{userId}/orders")]
+  public async Task<IActionResult> GetUserOrders(int userId)
+  {
+    UserModel? user = await _context.Users
+      .Include(u => u.Orders)
+      .ThenInclude(o => o.OrderItems)
+      .FirstOrDefaultAsync(u => u.Id == userId);
+
+    if (user == null)
+    {
+      return NotFound(new { message = $"User with id {userId} does not exist." });
+    }
+
+    return Ok(user.Orders);
+  }
+
   [HttpDelete("{userId}")]
   public async Task<IActionResult> DeleteUser(int userId)
   {

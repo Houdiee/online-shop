@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { Card, Tabs, Form, Input, Table, Spin, Typography, Space, Tag, Layout } from "antd";
-import axios from "axios";
 import { UserOutlined, CaretRightOutlined } from "@ant-design/icons";
-import { API_BASE_URL, user } from "../main";
 import Navbar from "../components/Navbar";
-import type { User } from "../types/user";
+import { UserContext } from "../contexts/UserContext";
+import axios from "axios";
+import { API_BASE_URL } from "../main";
+import { type Order } from "../types/order";
+
 
 const orderColumns = [
   {
@@ -69,35 +71,38 @@ const orderItemColumns = [
 ];
 
 export default function AccountCenter() {
-  const [userData, setUserData] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useContext(UserContext);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/users/${user.id}`);
-        setUserData(response.data);
-      } catch (error) {
-        console.error("Failed to fetch user data:", error);
-      } finally {
-        setLoading(false);
+    const fetchOrders = async () => {
+      if (user && user.id) {
+        setOrdersLoading(true);
+        try {
+          const response = await axios.get(`${API_BASE_URL}/users/${user.id}/orders`);
+          setOrders(response.data);
+        } catch (error) {
+          console.error("Failed to fetch user orders:", error);
+        } finally {
+          setOrdersLoading(false);
+        }
       }
     };
 
-    fetchUserData();
-  }, []);
+    fetchOrders();
+  }, [user]);
 
   const items = [
     {
       key: "personal-information",
       label: "Personal Information",
       children: (
-        <Spin spinning={loading} tip="Loading personal info...">
-          {userData ? (
+        <Spin spinning={!user} tip="Loading personal info...">
+          {user ? (
             <Form
               layout="vertical"
-              initialValues={userData}
+              initialValues={user}
               disabled
             >
               <Form.Item label="First Name" name="firstName">
@@ -123,10 +128,10 @@ export default function AccountCenter() {
       key: "orders",
       label: "Orders",
       children: (
-        <Spin spinning={loading} tip="Loading orders...">
-          {userData && userData.orders.length > 0 ? (
+        <Spin spinning={ordersLoading} tip="Loading orders...">
+          {orders.length > 0 ? (
             <Table
-              dataSource={userData.orders}
+              dataSource={orders}
               columns={orderColumns}
               rowKey="id"
               expandable={{
