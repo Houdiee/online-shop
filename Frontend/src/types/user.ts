@@ -6,7 +6,8 @@ export type User = {
   email: string;
   firstName: string;
   lastName: string;
-  role: "customer" | "admin";
+  role: "Customer" | "Admin";
+  isPendingAdmin: boolean;
   shoppingCart: ShoppingCart;
   orders: Order[];
 };

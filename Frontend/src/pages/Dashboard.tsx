@@ -11,11 +11,15 @@ import {
   Layout,
   Divider,
   Table,
+  Button,
+  message,
+  Space,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { API_BASE_URL } from '../main';
 import Navbar from '../components/Navbar';
 import StatisticCard from '../components/admin/StatisticCard';
+import type { User } from '../types/user';
 
 const { Option } = Select;
 
@@ -33,6 +37,7 @@ interface MostPopularProductStats {
   product: Product;
   totalSales: number;
   totalRevenue: number;
+  totalStock: number;
 }
 
 interface DashboardData {
@@ -122,7 +127,13 @@ const mostPopularProductColumns: ColumnsType<MostPopularProductStats> = [
     dataIndex: 'totalRevenue',
     key: 'totalRevenue',
     sorter: (a, b) => a.totalRevenue - b.totalRevenue,
-    render: (revenue: number) => `$${revenue.toFixed(2)}`,
+    render: (revenue: number) => `${revenue.toFixed(2)}`,
+  },
+  {
+    title: 'Stock',
+    dataIndex: 'totalStock',
+    key: 'totalStock',
+    sorter: (a, b) => a.totalStock - b.totalStock,
   },
 ];
 
@@ -134,6 +145,40 @@ export default function Dashboard() {
   const [productsSoldTimeFrame, setProductsSoldTimeFrame] = useState('7days');
   const [revenueTimeFrame, setRevenueTimeFrame] = useState('7days');
   const [completedOrdersTimeFrame, setCompletedOrdersTimeFrame] = useState('7days');
+
+  const [pendingAdminRequests, setPendingAdminRequests] = useState<User[]>([]);
+
+  const fetchPendingAdminRequests = async () => {
+    try {
+      const response = await axios.get<User[]>(`${API_BASE_URL}/users/pending-admin-requests`);
+      setPendingAdminRequests(response.data);
+    } catch (error) {
+      console.error('Failed to fetch pending admin requests:', error);
+      message.error('Failed to load pending admin requests.');
+    }
+  };
+
+  const handleApproveAdmin = async (userId: number) => {
+    try {
+      await axios.post(`${API_BASE_URL}/users/approve-admin-access/${userId}`);
+      message.success('Admin access approved!');
+      fetchPendingAdminRequests(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to approve admin access:', error);
+      message.error('Failed to approve admin access.');
+    }
+  };
+
+  const handleRejectAdmin = async (userId: number) => {
+    try {
+      await axios.post(`${API_BASE_URL}/users/reject-admin-access/${userId}`);
+      message.success('Admin access rejected!');
+      fetchPendingAdminRequests(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to reject admin access:', error);
+      message.error('Failed to reject admin access.');
+    }
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -147,6 +192,7 @@ export default function Dashboard() {
       }
     };
     fetchDashboardData();
+    fetchPendingAdminRequests();
   }, []);
 
   const getStatisticValue = (timeFrame: string, metric: string) => {
@@ -279,6 +325,38 @@ export default function Dashboard() {
                 </Card>
               </Col>
             </Row>
+          </Col>
+        </Row>
+
+        <Row gutter={[24, 24]} className="mt-6">
+          <Col xs={24}>
+            <Card title="Pending Admin Requests" className="h-full rounded-lg shadow-sm">
+              <Table
+                columns={[
+                  { title: 'Email', dataIndex: 'email', key: 'email' },
+                  { title: 'First Name', dataIndex: 'firstName', key: 'firstName' },
+                  { title: 'Last Name', dataIndex: 'lastName', key: 'lastName' },
+                  {
+                    title: 'Actions',
+                    key: 'actions',
+                    render: (_, record) => (
+                      <Space>
+                        <Button type="primary" onClick={() => handleApproveAdmin(record.id)}>
+                          Approve
+                        </Button>
+                        <Button danger onClick={() => handleRejectAdmin(record.id)}>
+                          Reject
+                        </Button>
+                      </Space>
+                    ),
+                  },
+                ]}
+                dataSource={pendingAdminRequests}
+                rowKey="id"
+                pagination={false}
+                locale={{ emptyText: 'No pending admin requests.' }}
+              />
+            </Card>
           </Col>
         </Row>
       </div>

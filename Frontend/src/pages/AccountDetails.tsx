@@ -1,11 +1,14 @@
 import { useContext, useState, useEffect } from "react";
-import { Card, Tabs, Form, Input, Table, Spin, Typography, Space, Tag, Layout } from "antd";
+import { Card, Tabs, Form, Input, Table, Spin, Typography, Space, Tag, Layout, Button, message } from "antd";
 import { UserOutlined, CaretRightOutlined } from "@ant-design/icons";
 import Navbar from "../components/Navbar";
 import { UserContext } from "../contexts/UserContext";
 import axios from "axios";
 import { API_BASE_URL } from "../main";
 import { type Order } from "../types/order";
+import { useLocation, useNavigate } from "react-router-dom";
+import type { User } from "../types/user";
+import { Content } from "antd/es/layout/layout";
 
 
 const orderColumns = [
@@ -71,9 +74,29 @@ const orderItemColumns = [
 ];
 
 export default function AccountCenter() {
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = useState(false);
+
+  const activeTab = location.pathname.split("/")[2] || "details";
+
+  const handleTabChange = (key: string) => {
+    navigate(`/account/${key}`);
+  };
+
+  useEffect(() => {
+    if (user) {
+      form.setFieldsValue({
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
+    }
+  }, [user, form]);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -93,30 +116,89 @@ export default function AccountCenter() {
     fetchOrders();
   }, [user]);
 
+  const handleUpdateUser = async (values: any) => {
+    setSubmitting(true);
+    try {
+      const response = await axios.put(`${API_BASE_URL}/users/${user?.id}`, values);
+      const updatedUser: User = response.data;
+      setUser(updatedUser, localStorage.getItem("token")); // Update user in context
+      message.success("Profile updated successfully!");
+    } catch (error) {
+      console.error("Failed to update user:", error);
+      message.error("Failed to update profile.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRequestAdminAccess = async () => {
+    setSubmitting(true);
+    try {
+      await axios.post(`${API_BASE_URL}/users/request-admin-access`);
+      message.success("Admin access request submitted!");
+      // Optionally refetch user to update isPendingAdmin status
+      // This will be handled by the useEffect in UserContext on location change
+    } catch (error) {
+      console.error("Failed to request admin access:", error);
+      message.error("Failed to submit admin access request.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const items = [
     {
-      key: "personal-information",
+      key: "details",
       label: "Personal Information",
       children: (
         <Spin spinning={!user} tip="Loading personal info...">
           {user ? (
             <Form
+              form={form}
               layout="vertical"
               initialValues={user}
-              disabled
+              onFinish={handleUpdateUser}
             >
+              <Form.Item label="Email" name="email">
+                <Input disabled />
+              </Form.Item>
               <Form.Item label="First Name" name="firstName">
                 <Input />
               </Form.Item>
               <Form.Item label="Last Name" name="lastName">
                 <Input />
               </Form.Item>
-              <Form.Item label="Email" name="email">
-                <Input />
+              <Form.Item label="Password" name="password">
+                <Input.Password placeholder="Leave blank to keep current password" />
               </Form.Item>
-              <Form.Item label="Role" name="role">
-                <Input />
+              <Form.Item>
+                <Button type="primary" htmlType="submit" loading={submitting}>
+                  Save Changes
+                </Button>
               </Form.Item>
+
+              <Form.Item>
+                <Button danger onClick={() => {
+                  setUser(null, null);
+                  navigate('/login');
+                }}>
+                  Logout
+                </Button>
+              </Form.Item>
+
+              {user.role === "Customer" && !user.isPendingAdmin && (
+                <Form.Item>
+                  <Button type="default" onClick={handleRequestAdminAccess} loading={submitting}>
+                    Request Admin Access
+                  </Button>
+                </Form.Item>
+              )}
+
+              {user.isPendingAdmin && (
+                <Typography.Text type="warning">
+                  Your admin access request is pending approval.
+                </Typography.Text>
+              )}
             </Form>
           ) : (
             <Typography.Text>No personal information available.</Typography.Text>
@@ -131,7 +213,7 @@ export default function AccountCenter() {
         <Spin spinning={ordersLoading} tip="Loading orders...">
           {orders.length > 0 ? (
             <Table
-              dataSource={orders}
+              dataSource={orders.slice().reverse()}
               columns={orderColumns}
               rowKey="id"
               expandable={{
@@ -168,7 +250,7 @@ export default function AccountCenter() {
   ];
 
   return (
-    <Layout>
+    <Layout className="h-screen">
       <Space direction="vertical" size="large">
         <Navbar />
         <div className="flex justify-center p-6 bg-gray-100">
@@ -181,7 +263,7 @@ export default function AccountCenter() {
             )}
             style={{ width: "100%", maxWidth: 800 }}
           >
-            <Tabs items={items} />
+            <Tabs activeKey={activeTab} onChange={handleTabChange} items={items} />
           </Card>
         </div>
       </Space>

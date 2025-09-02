@@ -1,5 +1,6 @@
 using Api.Data;
 using Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +13,7 @@ public class DashboardController(ApiDbContext context) : ControllerBase
     private readonly ApiDbContext _context = context;
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetDashboardStatistics()
     {
         DateTime now = DateTime.UtcNow;
@@ -98,7 +100,7 @@ public class DashboardController(ApiDbContext context) : ControllerBase
         var mostPopularProductsQuery = await _context.OrderItems
             .Include(oi => oi.ProductVariant)
             .ThenInclude(pv => pv.Product)
-            .ThenInclude(p => p.Variants)
+            .ThenInclude(p => p.Variants.OrderBy(v => v.CreatedAt))
             .Select(oi => new
             {
                 oi.ProductVariant.Product,
@@ -112,7 +114,8 @@ public class DashboardController(ApiDbContext context) : ControllerBase
             .Select(g => new MostPopularProductStats(
                 g.Key,
                 g.Sum(x => x.Quantity),
-                g.Sum(x => x.Quantity * x.Price)
+                g.Sum(x => x.Quantity * x.Price),
+                g.Key.Variants.Sum(v => v.StockQuantity)
             ))
             .OrderByDescending(x => x.TotalSales)
             .Take(5)

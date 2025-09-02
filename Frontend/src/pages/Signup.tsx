@@ -1,44 +1,47 @@
 import { Button, Flex, Form, Input, Layout, Card, Typography, notification } from "antd";
 import Navbar from "../components/Navbar";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { API_BASE_URL } from "../main";
-import { UserContext } from "../contexts/UserContext";
-import { type User } from "../types/user";
 
 const { Title, Text } = Typography;
 
-type LoginRequest = {
+type SignupRequest = {
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
 };
 
-const LoginPage = () => {
+const SignupPage = () => {
   const [loading, setLoading] = useState(false);
   const [api, contextHolder] = notification.useNotification();
   const navigate = useNavigate();
-  const { setUser } = useContext(UserContext);
 
-  const onFinish = async (values: LoginRequest) => {
+  const onFinish = async (values: SignupRequest) => {
     setLoading(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, values);
-      const { user, token } = response.data;
-      setUser(user, token);
+      await axios.post(`${API_BASE_URL}/users`, {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        password: values.password,
+        role: "Customer",
+      });
       api.success({
-        message: 'Login Successful',
-        description: `Welcome back, ${user.firstName}!`,
+        message: 'Registration Successful',
+        description: 'Your account has been created. Please log in.',
         placement: 'bottomRight',
       });
-      navigate('/products');
+      navigate('/login');
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Registration failed:', error);
       const errorMessage = axios.isAxiosError(error) && error.response
         ? error.response.data.message
         : 'An unexpected error occurred. Please try again.';
       api.error({
-        message: 'Login Failed',
+        message: 'Registration Failed',
         description: errorMessage,
         placement: 'bottomRight',
       });
@@ -58,17 +61,33 @@ const LoginPage = () => {
       <Layout.Content className="flex-1 p-4 flex flex-col items-center justify-start h-screen">
         <Card className="max-w-md w-full rounded-lg shadow-lg !mt-20">
           <Flex vertical align="center" className="text-center mt-6">
-            <Title level={3} className="!mb-1">Welcome Back</Title>
-            <Text type="secondary">Please log in to your account</Text>
+            <Title level={3} className="!mb-1">Create an Account</Title>
+            <Text type="secondary">Sign up to get started</Text>
           </Flex>
           <Form
-            name="basic"
+            name="signup"
             initialValues={{ remember: true }}
             onFinish={onFinish}
             onFinishFailed={onFinishFailed}
             autoComplete="off"
             layout="vertical"
           >
+            <Form.Item
+              label="First Name"
+              name="firstName"
+              rules={[{ required: true, message: 'Please input your first name!' }]}
+            >
+              <Input className="rounded-md" />
+            </Form.Item>
+
+            <Form.Item
+              label="Last Name"
+              name="lastName"
+              rules={[{ required: true, message: 'Please input your last name!' }]}
+            >
+              <Input className="rounded-md" />
+            </Form.Item>
+
             <Form.Item
               label="Email"
               name="email"
@@ -97,12 +116,12 @@ const LoginPage = () => {
                 className="rounded-md"
                 loading={loading}
               >
-                Log In
+                Sign Up
               </Button>
             </Form.Item>
 
             <Flex justify="center" className="mt-4">
-              <Text>Don't have an account? <Link to="/signup">Sign up</Link></Text>
+              <Text>Already have an account? <Link to="/login">Log in</Link></Text>
             </Flex>
           </Form>
         </Card>
@@ -111,5 +130,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
-
+export default SignupPage;

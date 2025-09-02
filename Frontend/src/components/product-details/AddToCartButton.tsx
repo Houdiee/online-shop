@@ -1,22 +1,36 @@
 import { useContext, useState } from "react";
 import { ShoppingCartOutlined, CheckOutlined } from "@ant-design/icons";
 import { Button } from "antd";
-import { type AddShoppingCartItemRequest } from "../../types/shopping-cart";
+import { type AddShoppingCartItemRequest, type ShoppingCart } from "../../types/shopping-cart";
 import axios from "axios";
 import { API_BASE_URL } from "../../main";
 import { UserContext } from "../../contexts/UserContext";
 
 export default function AddToCartButton({ productVariantId, quantity }: AddShoppingCartItemRequest) {
-  const { user } = useContext(UserContext);
+  const { user, setUser, token } = useContext(UserContext);
   const [buttonState, setButtonState] = useState<"default" | "success">('default');
 
   const handleAddToCart = async () => {
     if (user) {
+      console.log("AddToCartButton: handleAddToCart - User before API call:", user);
       try {
-        await axios.post(`${API_BASE_URL}/users/${user.id}/shoppingcart`, {
+        const response = await axios.post(`${API_BASE_URL}/users/${user.id}/shoppingcart`, {
           ProductVariantId: productVariantId,
           Quantity: quantity,
         });
+
+        console.log("AddToCartButton: handleAddToCart - API response data:", response.data);
+
+        const userFromResponse = response.data;
+        const finalUser = {
+          ...userFromResponse,
+          role: user?.role
+        };
+
+        console.log("AddToCartButton: handleAddToCart - Final user object before setUser:", finalUser);
+        console.log("AddToCartButton: handleAddToCart - Token passed to setUser:", user.token);
+
+        setUser(finalUser, token);
 
         setButtonState('success');
 
@@ -25,7 +39,7 @@ export default function AddToCartButton({ productVariantId, quantity }: AddShopp
         }, 3000);
 
       } catch (error) {
-        console.error("Failed to add item to cart:", error);
+        console.error("AddToCartButton: Failed to add item to cart:", error);
       }
     }
   };

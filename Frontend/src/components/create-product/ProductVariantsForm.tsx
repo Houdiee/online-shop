@@ -213,7 +213,18 @@ export default function ProductVariantsForm({ form }: ProductVariantsFormProps) 
             <Form.Item>
               <Button
                 type="dashed"
-                onClick={() => add()}
+                onClick={() => {
+                  if (useSamePrices) {
+                    const formValues: FormValues = form.getFieldsValue();
+                    const firstVariantPrices = {
+                      price: formValues.variants?.[0]?.price,
+                      discountedPrice: formValues.variants?.[0]?.discountedPrice,
+                    };
+                    add({ ...firstVariantPrices });
+                  } else {
+                    add();
+                  }
+                }}
                 block
                 icon={<PlusOutlined />}
                 className="!h-12 !border-2 !border-dashed !border-gray-300 !text-gray-600 hover:!border-blue-500 hover:!text-blue-500 transition-colors"

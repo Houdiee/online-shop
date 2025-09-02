@@ -1,53 +1,41 @@
 import { CloseOutlined } from "@ant-design/icons";
 import { Button, Divider, Flex, Image, Space, Typography } from "antd";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import type { ShoppingCart } from "../types/shopping-cart";
 import axios from "axios";
 import { API_BASE_URL } from "../main";
-import type { User } from "../types/user";
 import QuantitySelector from "./product-details/QuantitySelector";
 import { UserContext } from "../contexts/UserContext";
 
 interface CartMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  shoppingCartData?: ShoppingCart;
 }
 
-export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenuProps) {
-  const { user } = useContext(UserContext);
-  const [cart, setCart] = useState<ShoppingCart | null>(null);
+export default function CartMenu({ isOpen, onClose }: CartMenuProps) {
+  const { user, setUser, token } = useContext(UserContext);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  useEffect(() => {
-    const fetchCart = async () => {
+  const handleQuantityChange = async (itemId: number, newQuantity: number) => {
+    if (user && user.shoppingCart) {
       try {
-        const response = await axios.get(`${API_BASE_URL}/users/${user!.id}`);
-        const userData: User = response.data;
-        const cartData: ShoppingCart = userData.shoppingCart;
-        setCart(cartData);
+        const response = await axios.patch(`${API_BASE_URL}/users/${user.id}/shoppingcart/${itemId}`, {
+          quantity: newQuantity,
+        });
+
+        const userFromResponse = response.data;
+        const finalUser = {
+          ...userFromResponse,
+          role: user?.role
+        };
+        setUser(finalUser, token);
       } catch (error) {
-        console.error("Failed to fetch shopping cart:", error);
+        console.error("CartMenu: Failed to update item quantity:", error);
       }
-    };
-
-    if (user && !shoppingCartData) {
-      fetchCart();
-    } else {
-      setCart(shoppingCartData || null);
-    }
-  }, [shoppingCartData]);
-
-  const handleQuantityChange = (itemId: number, newQuantity: number) => {
-    if (cart) {
-      const updatedItems = cart.items.map(item =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      );
-      setCart({ ...cart, items: updatedItems });
     }
   };
 
-  const totalCost = cart?.items.reduce((total, item) => {
+  const totalCost = user?.shoppingCart?.items.reduce((total, item) => {
     if (item.productVariant) {
       return total + item.productVariant.price * item.quantity;
     }
@@ -57,12 +45,12 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
   const handleCheckout = async () => {
     setIsCheckingOut(true);
 
-    if (!cart) {
+    if (!user?.shoppingCart) {
       console.error("Cannot checkout with empty cart");
       return;
     }
 
-    const response = await axios.post(`${API_BASE_URL}/payment/checkout/${cart.id}`);
+    const response = await axios.post(`${API_BASE_URL}/payment/checkout/${user.shoppingCart.id}`);
     const redirectURL = response.data.url;
     window.location.href = redirectURL;
     setIsCheckingOut(false);
@@ -100,14 +88,14 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
         </Flex>
 
         {/* Cart items content */}
-        {!cart ? (
+        {!user?.shoppingCart ? (
           <div className="text-gray-500 text-center flex-grow flex items-center justify-center">Loading cart...</div>
-        ) : cart.items.length === 0 ? (
+        ) : user.shoppingCart.items.length === 0 ? (
           <div className="text-gray-500 text-center flex-grow flex items-center justify-center">Your cart is currently empty.</div>
         ) : (
           <div className="flex-grow overflow-y-auto pr-2">
             <Flex vertical gap="middle">
-              {cart.items.map(item => (
+              {user.shoppingCart.items.map(item => (
                 item.productVariant && (
                   <div key={item.id}>
                     <Divider size="small" />
@@ -143,7 +131,7 @@ export default function CartMenu({ isOpen, onClose, shoppingCartData }: CartMenu
         )}
 
         {/* Footer */}
-        {cart && cart.items.length > 0 && (
+        {user?.shoppingCart && user.shoppingCart.items.length > 0 && (
           <div className="mt-6 pt-4">
             <Divider className="!my-0" />
             <Flex justify="space-between" align="center" className="my-4">

@@ -2,6 +2,7 @@ using Api.Data;
 using Api.Dtos.Product;
 using Api.Dtos.Products;
 using Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
@@ -17,6 +18,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
   private readonly ApiDbContext _context = context;
 
   [HttpPost]
+  [Authorize(Roles = "Admin")]
   public async Task<IActionResult> CreateNewProduct([FromBody] CreateProductRequest req)
   {
     ProductModel newProduct = new()
@@ -52,6 +54,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
   }
 
   [HttpPut("{productId}")]
+  [Authorize(Roles = "Admin")]
   public async Task<IActionResult> UpdateProduct(int productId, [FromBody] UpdateProductRequest req)
   {
     ProductModel? product = await _context.Products
@@ -115,6 +118,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
 
   // 💡 New endpoint to delete a product and its images
   [HttpDelete("{productId}")]
+  [Authorize(Roles = "Admin")]
   public async Task<IActionResult> DeleteProduct(int productId)
   {
     ProductModel? product = await _context.Products
@@ -191,7 +195,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
       [FromQuery] string? tags = null,
       [FromQuery] string? sortBy = null)
   {
-    IQueryable<ProductModel> query = _context.Products.Include(static p => p.Variants);
+    IQueryable<ProductModel> query = _context.Products.Include(p => p.Variants.OrderBy(v => v.CreatedAt));
 
     if (!string.IsNullOrEmpty(search))
     {
@@ -223,6 +227,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
   }
 
   [HttpPut("images/{variantId}")]
+  [Authorize(Roles = "Admin")]
   public async Task<IActionResult> ReplaceVariantImages(int variantId, IFormFileCollection files)
   {
     ProductVariantModel? variant = await _context.ProductVariants.FindAsync(variantId);
@@ -289,6 +294,7 @@ public class ProductsController(ApiDbContext context) : ControllerBase
   }
 
   [HttpDelete("images/{variantId}/{fileName}")]
+  [Authorize(Roles = "Admin")]
   public async Task<IActionResult> DeleteVariantImage(int variantId, string fileName)
   {
     ProductVariantModel? variant = await _context.ProductVariants.FindAsync(variantId);

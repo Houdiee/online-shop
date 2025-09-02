@@ -33,6 +33,7 @@ public class AdminDashboardModel
 public record MostPopularProductStats(
     ProductModel Product,
     int TotalSales,
-    decimal TotalRevenue
+    decimal TotalRevenue,
+    int TotalStock
 );
 

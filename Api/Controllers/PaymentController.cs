@@ -1,6 +1,7 @@
 using Api.Data;
 using Api.Filters;
 using Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
@@ -16,6 +17,7 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
     private readonly IConfiguration _configuration = configuration;
 
     [HttpPost("checkout/{shoppingCartId}")]
+    [Authorize]
     [ServiceFilter(typeof(VerifyUserExistsAttribute))]
     public async Task<IActionResult> CreateCheckoutSession(int shoppingCartId)
     {
@@ -64,13 +66,15 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
             });
         }
 
+        string frontendUrl = _configuration.GetConnectionString("Frontend")!;
+
         SessionCreateOptions options = new()
         {
             PaymentMethodTypes = ["card"],
             LineItems = lineItems,
             Mode = "payment",
-            SuccessUrl = $"{baseUrl}/payment/success",
-            CancelUrl = $"{baseUrl}/payment/cancel",
+            SuccessUrl = $"{frontendUrl}/account/orders",
+            CancelUrl = $"{frontendUrl}/payment/cancel",
             Metadata = new Dictionary<string, string>
             {
                 { "userId", user.Id.ToString() },
@@ -208,6 +212,9 @@ public class PaymentController(ApiDbContext context, IConfiguration configuratio
                     Console.WriteLine($"Webhook Error: ProductVariant or Product is null for cart item ID: {item.Id}. Cannot create order item.");
                     continue;
                 }
+
+                // Subtract stock quantity
+                item.ProductVariant.StockQuantity -= item.Quantity;
 
                 newOrder.OrderItems.Add(new OrderItemModel
                 {

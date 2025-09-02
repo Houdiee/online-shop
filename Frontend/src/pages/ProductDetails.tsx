@@ -1,5 +1,5 @@
 import { Breadcrumb, Col, Divider, Flex, Layout, Row, Space, Button, Popconfirm, notification } from "antd";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import ProductImageCarousel from "../components/product-details/ProductImageCarousel";
 import AddToCartButton from "../components/product-details/AddToCartButton";
 import ProductDescription from "../components/product-details/ProductDescription";
@@ -13,12 +13,13 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { Content } from "antd/es/layout/layout";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { UserContext } from "../contexts/UserContext";
 
 export default function ProductDetails() {
+  const { user } = useContext(UserContext);
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [isAdmin, setIsAdmin] = useState(true);
 
   const [api, contextHolder] = notification.useNotification();
 
@@ -100,7 +101,7 @@ export default function ProductDetails() {
                 <Flex vertical gap={10} className="h-full">
                   <Flex justify="space-between" align="center">
                     <ProductInfo name={product.name} price={selectedVariant.price.toFixed()} tags={product.tags} />
-                    {isAdmin && (
+                    {(user?.role === "Admin") && (
                       <Space>
                         <Button
                           type="primary"

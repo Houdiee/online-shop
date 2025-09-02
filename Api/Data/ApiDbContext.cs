@@ -37,6 +37,21 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options) : DbContext(op
             .HasMany(static u => u.Orders)
             .WithOne(static ord => ord.User)
             .HasForeignKey(static ord => ord.UserId);
+
+      _ = user.HasData(
+        new UserModel
+        {
+          Id = 1,
+          Email = "admin@admin.com",
+          FirstName = "Admin",
+          LastName = "User",
+          PasswordHash = "adminpass", // In a real app, hash this password!
+          Role = UserRole.Admin,
+          CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+          IsPendingAdmin = false,
+          Orders = new List<OrderModel>(),
+        }
+      );
     });
 
 

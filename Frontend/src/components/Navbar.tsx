@@ -13,10 +13,9 @@ import { UserContext } from "../contexts/UserContext";
 
 interface NavbarProps {
   productsData?: Product[];
-  shoppingCartData?: ShoppingCart;
 };
 
-export default function Navbar({ productsData, shoppingCartData }: NavbarProps) {
+export default function Navbar({ productsData }: NavbarProps) {
   const { user } = useContext(UserContext);
   const [searchValue, setSearchValue] = useState<string>("");
   const [options, setOptions] = useState<{ value: string }[]>([]);
@@ -121,7 +120,7 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
     if (!user) {
       navigate('/login');
     } else {
-      navigate('/account');
+      navigate('/account/details');
     }
   };
 
@@ -133,7 +132,7 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
           mode="horizontal"
           className="flex-1 min-w-0 border-b-0 !p-0 !h-auto"
         >
-          {user?.role === "admin" && (<Menu.Item key="create-product">
+          {user?.role === "Admin" && (<Menu.Item key="create-product">
             <Link to="/admin/dashboard">
               Dashboard
             </Link>
@@ -163,14 +162,14 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
           mode="horizontal"
           className="flex-1 min-w-0 border-b-0 !p-0 !h-auto justify-end"
         >
-          {user?.role === "admin" && (<Menu.Item key="create-product">
+          {user?.role === "Admin" && (<Menu.Item key="create-product">
             <Link to="/admin/create">
               <PlusOutlined /> Create New
             </Link>
           </Menu.Item>)}
 
           <Menu.Item key="account" onClick={handleAccountClick}>
-            <UserOutlined /> Account
+            <UserOutlined /> {user ? user.firstName : "Account"}
           </Menu.Item>
           <Menu.Item key="cart" onClick={handleCartClick}>
             <ShoppingCartOutlined /> Cart
@@ -181,7 +180,6 @@ export default function Navbar({ productsData, shoppingCartData }: NavbarProps) 
       <CartMenu
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        shoppingCartData={shoppingCartData}
       />
     </>
   );

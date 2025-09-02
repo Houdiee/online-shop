@@ -179,6 +179,10 @@ export default function CreateProduct() {
         placement: 'bottomRight',
       });
 
+      if (!productId) {
+        navigate('/products', { state: { productCreated: true } });
+      }
+
     } catch (error) {
       console.error(`Failed to ${productId ? 'update' : 'create'} product or upload images:`, error);
       api.error({

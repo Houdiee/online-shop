@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Api.Models;
 using Api.Data;
@@ -15,8 +16,16 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
     private readonly ApiDbContext _context = context;
 
     [HttpPost]
+    [Authorize]
+    [ServiceFilter(typeof(VerifyUserExistsAttribute))]
     public async Task<IActionResult> AddItemToShoppingCart(int userId, [FromBody] AddShoppingCartItemRequest request)
     {
+        UserModel? user = (UserModel)HttpContext.Items["user"]!;
+        if (user.Id != userId)
+        {
+            return Forbid();
+        }
+
         ProductVariantModel? productVariant = await _context.ProductVariants
             .Include(pv => pv.Product)
             .FirstOrDefaultAsync(pv => pv.Id == request.ProductVariantId);
@@ -64,7 +73,19 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
 
         await UpdateTotalCost(shoppingCart.Id);
 
-        return Ok(shoppingCart);
+        UserModel? userWithUpdatedCart = await _context.Users
+            .Include(u => u.ShoppingCart)
+                .ThenInclude(sc => sc.Items)
+                    .ThenInclude(sci => sci.ProductVariant)
+                        .ThenInclude(pv => pv.Product)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (userWithUpdatedCart == null)
+        {
+            return NotFound("User with updated cart could not be found.");
+        }
+
+        return Ok(userWithUpdatedCart);
     }
 
     private async Task UpdateTotalCost(int shoppingCartId)
@@ -86,8 +107,16 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
     }
 
     [HttpDelete("{shoppingCartItemId}")]
+    [Authorize]
+    [ServiceFilter(typeof(VerifyUserExistsAttribute))]
     public async Task<IActionResult> DeleteItemFromShoppingCart(int userId, int shoppingCartItemId)
     {
+        UserModel? user = (UserModel)HttpContext.Items["user"]!;
+        if (user.Id != userId)
+        {
+            return Forbid();
+        }
+
         ShoppingCartItemModel? itemToRemove = await _context.ShoppingCartItems
             .Include(sci => sci.ShoppingCart)
             .FirstOrDefaultAsync(item =>
@@ -106,7 +135,19 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
 
             await UpdateTotalCost(itemToRemove.ShoppingCartId);
 
-            return NoContent();
+            UserModel? userWithUpdatedCart = await _context.Users
+                .Include(u => u.ShoppingCart)
+                    .ThenInclude(sc => sc.Items)
+                        .ThenInclude(sci => sci.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                .FirstOrDefaultAsync(u => u.Id == user.Id);
+
+            if (userWithUpdatedCart == null)
+            {
+                return NotFound("User with updated cart could not be found.");
+            }
+
+            return Ok(userWithUpdatedCart);
         }
         catch (DbUpdateException ex)
         {
@@ -116,11 +157,19 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
     }
 
     [HttpPatch("{shoppingCartItemId}")]
+    [Authorize]
+    [ServiceFilter(typeof(VerifyUserExistsAttribute))]
     public async Task<IActionResult> UpdateItemQuantity(
         int userId,
         int shoppingCartItemId,
         [FromBody] UpdateCartItemQuantityRequest request)
     {
+        UserModel? user = (UserModel)HttpContext.Items["user"]!;
+        if (user.Id != userId)
+        {
+            return Forbid();
+        }
+
         ShoppingCartItemModel? itemToUpdate = await _context.ShoppingCartItems
             .Include(sci => sci.ShoppingCart)
             .FirstOrDefaultAsync(item =>
@@ -141,18 +190,19 @@ public class ShoppingCartController(ApiDbContext context) : ControllerBase
 
             await UpdateTotalCost(itemToUpdate.ShoppingCartId);
 
-            ShoppingCartModel? updatedShoppingCart = await _context.ShoppingCarts
-                .Include(sc => sc.Items)
-                .ThenInclude(sci => sci.ProductVariant)
-                .ThenInclude(pv => pv.Product)
-                .FirstOrDefaultAsync(sc => sc.Id == itemToUpdate.ShoppingCartId);
+            UserModel? userWithUpdatedCart = await _context.Users
+                .Include(u => u.ShoppingCart)
+                    .ThenInclude(sc => sc.Items)
+                        .ThenInclude(sci => sci.ProductVariant)
+                            .ThenInclude(pv => pv.Product)
+                .FirstOrDefaultAsync(u => u.Id == user.Id);
 
-            if (updatedShoppingCart == null)
+            if (userWithUpdatedCart == null)
             {
-                return NotFound("Updated shopping cart could not be found.");
+                return NotFound("User with updated cart could not be found.");
             }
 
-            return Ok(updatedShoppingCart);
+            return Ok(userWithUpdatedCart);
         }
         catch (DbUpdateException ex)
         {

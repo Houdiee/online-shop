@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Api.Data;
+using Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
@@ -11,21 +13,22 @@ public class VerifyUserExistsAttribute(ApiDbContext context) : IAsyncActionFilte
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        if (context.ActionArguments.TryGetValue("shoppingCartId", out var shoppingCartIdObj) && shoppingCartIdObj is int shoppingCartId)
+        var userIdClaim = context.HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+        if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
         {
-            var shoppingCart = await _context.ShoppingCarts.FirstOrDefaultAsync(sc => sc.Id == shoppingCartId);
-
-            if (shoppingCart is null)
-            {
-                context.Result = new NotFoundObjectResult($"Shopping cart with ID {shoppingCartId} not found.");
-                return;
-            }
-
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == shoppingCart.UserId);
+            var user = await _context.Users
+                .Include(u => u.ShoppingCart)
+                    .ThenInclude(sh => sh.Items)
+                        .ThenInclude(i => i.ProductVariant)
+                .Include(u => u.Orders)
+                    .ThenInclude(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user is null)
-            {
-                context.Result = new NotFoundObjectResult($"User with ID {shoppingCart.UserId} not found.");
+            { 
+                context.Result = new NotFoundObjectResult($"User with ID {userId} not found.");
                 return;
             }
 

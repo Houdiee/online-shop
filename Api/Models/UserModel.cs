@@ -21,6 +21,8 @@ public class UserModel
   public required DateTime CreatedAt { get; set; }
 
   public required ICollection<OrderModel> Orders { get; set; }
+
+  public bool IsPendingAdmin { get; set; } = false;
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter<UserRole>))]
