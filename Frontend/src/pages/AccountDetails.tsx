@@ -8,8 +8,6 @@ import { API_BASE_URL } from "../main";
 import { type Order } from "../types/order";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { User } from "../types/user";
-import { Content } from "antd/es/layout/layout";
-
 
 const orderColumns = [
   {
@@ -121,7 +119,7 @@ export default function AccountCenter() {
     try {
       const response = await axios.put(`${API_BASE_URL}/users/${user?.id}`, values);
       const updatedUser: User = response.data;
-      setUser(updatedUser, localStorage.getItem("token")); // Update user in context
+      setUser(updatedUser, localStorage.getItem("token"));
       message.success("Profile updated successfully!");
     } catch (error) {
       console.error("Failed to update user:", error);
@@ -136,9 +134,11 @@ export default function AccountCenter() {
     try {
       await axios.post(`${API_BASE_URL}/users/request-admin-access`);
       message.success("Admin access request submitted!");
-      // Optionally refetch user to update isPendingAdmin status
-      // This will be handled by the useEffect in UserContext on location change
-    } catch (error) {
+      if (user) {
+        setUser({ ...user, isPendingAdmin: true }, localStorage.getItem("token"));
+      }
+    }
+    catch (error) {
       console.error("Failed to request admin access:", error);
       message.error("Failed to submit admin access request.");
     } finally {
