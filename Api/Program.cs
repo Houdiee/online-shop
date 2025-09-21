@@ -21,15 +21,14 @@ builder.Services
 
 builder.Services.AddDbContextPool<ApiDbContext>(options =>
 {
-  _ = options.UseNpgsql(builder.Configuration.GetConnectionString("Database"));
+    _ = options.UseNpgsql(builder.Configuration.GetConnectionString("Database"));
 });
 
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
+}).AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -37,33 +36,31 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = false,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["ApiKeys:Jwt:Secret"]!))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!))
     };
 });
 
 builder.Services.AddCors(options =>
 {
-  options.AddDefaultPolicy(policy =>
-  {
-    policy
-    .WithOrigins("http://localhost:5173")
-    .AllowAnyMethod()
-    .AllowAnyHeader();
-  });
+    options.AddDefaultPolicy(policy =>
+    {
+        policy
+      .WithOrigins("http://localhost:5173")
+      .AllowAnyMethod()
+      .AllowAnyHeader();
+    });
 });
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-  app.MapOpenApi();
+    app.MapOpenApi();
 }
 
 // app.UseHttpsRedirection();
 
 app.UseStaticFiles();
-
-app.UseRouting();
 
 app.UseCors();
 

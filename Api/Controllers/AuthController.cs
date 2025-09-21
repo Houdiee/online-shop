@@ -38,7 +38,7 @@ public class AuthController(ApiDbContext context, IConfiguration configuration) 
 
     private string GenerateJwtToken(UserModel user)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["ApiKeys:Jwt:Secret"]!));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]!));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -49,7 +49,7 @@ public class AuthController(ApiDbContext context, IConfiguration configuration) 
         };
 
         var token = new JwtSecurityToken(
-            issuer: null, 
+            issuer: null,
             audience: null,
             claims: claims,
             expires: DateTime.Now.AddDays(7),
